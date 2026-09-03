@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: Bulk export for Northwind Outfitters
+  problem_statement: Their ops team re-keys order data into a spreadsheet every Friday.
+  expected_impact: Saves roughly four hours a week and removes a recurring source of typos.
+  urgency: high
+
+two:
+  title: Dark mode for the Harborlight dashboard
+  problem_statement: Night-shift staff find the current theme hard on the eyes.
+  expected_impact: Small quality-of-life win for one partner; no revenue attached.
+  urgency: low

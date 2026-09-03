@@ -1,0 +1,37 @@
+<%= form_with(model: request, class: "contents") do |form| %>
+  <% if request.errors.any? %>
+    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
+      <h2><%= pluralize(request.errors.count, "error") %> prohibited this request from being saved:</h2>
+
+      <ul class="list-disc ml-6">
+        <% request.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="my-5">
+    <%= form.label :title %>
+    <%= form.text_field :title, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": request.errors[:title].none?, "border-red-400 focus:outline-red-600": request.errors[:title].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :problem_statement %>
+    <%= form.textarea :problem_statement, rows: 4, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": request.errors[:problem_statement].none?, "border-red-400 focus:outline-red-600": request.errors[:problem_statement].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :expected_impact %>
+    <%= form.textarea :expected_impact, rows: 4, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": request.errors[:expected_impact].none?, "border-red-400 focus:outline-red-600": request.errors[:expected_impact].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :urgency %>
+    <%= form.text_field :urgency, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": request.errors[:urgency].none?, "border-red-400 focus:outline-red-600": request.errors[:urgency].any?}] %>
+  </div>
+
+  <div class="inline">
+    <%= form.submit class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+  </div>
+<% end %>
