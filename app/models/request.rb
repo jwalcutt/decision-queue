@@ -16,6 +16,10 @@ class Request < ApplicationRecord
     STATUS_ORDER.index_with { |status| counts.fetch(status, 0) }
   end
 
+  # Unknown or blank values mean "no filter", so a typo in the URL shows everything.
+  scope :with_status, ->(status) { where(status: status) if statuses.key?(status) }
+  scope :with_urgency, ->(urgency) { where(urgency: urgency) if urgencies.key?(urgency) }
+
   # Queue order: still-actionable statuses first, then urgency, then oldest first.
   scope :queue_order, -> {
     in_order_of(:status, STATUS_ORDER, filter: false)

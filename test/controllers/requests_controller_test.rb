@@ -28,6 +28,45 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='request[urgency]'] option", 4
   end
 
+  test "status filter narrows the rows, marks the select, and leaves the counts global" do
+    get root_url, params: { status: "deferred" }
+
+    assert_response :success
+    assert_equal [ dom_id(requests(:three)) ], css_select("tbody tr").map { |tr| tr["id"] }
+    assert_select "select[name='status'] option[selected][value='deferred']"
+    assert_select "#status_counts [data-status='pending'] dd", "2"
+  end
+
+  test "urgency filter keeps queue order within the subset" do
+    accepted_high = queued(urgency: "high", status: "accepted", created_at: 1.day.ago)
+
+    get root_url, params: { urgency: "high" }
+
+    assert_equal [ dom_id(requests(:one)), dom_id(accepted_high) ], css_select("tbody tr").map { |tr| tr["id"] }
+  end
+
+  test "status and urgency filters combine" do
+    get root_url, params: { status: "pending", urgency: "low" }
+
+    assert_equal [ dom_id(requests(:two)) ], css_select("tbody tr").map { |tr| tr["id"] }
+  end
+
+  test "an unknown filter value shows the whole queue" do
+    get root_url, params: { status: "bogus" }
+
+    assert_response :success
+    assert_equal Request.count, css_select("tbody tr").size
+  end
+
+  test "filter form and count links point at the queue" do
+    get root_url
+
+    assert_select "form#filters[action=?][method='get']", root_path
+    assert_select "form#filters select[name='status'] option", 5
+    assert_select "form#filters select[name='urgency'] option", 4
+    assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(status: "deferred")
+  end
+
   test "queue shows a count for every status" do
     queued(urgency: "medium", status: "deferred", created_at: 1.day.ago)
     queued(urgency: "medium", status: "accepted", created_at: 1.day.ago)

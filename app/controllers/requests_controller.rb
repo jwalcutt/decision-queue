@@ -3,7 +3,7 @@ class RequestsController < ApplicationController
 
   # GET /requests
   def index
-    @requests = Request.queue_order
+    @requests = Request.with_status(params[:status]).with_urgency(params[:urgency]).queue_order
     @status_counts = Request.status_counts
   end
 

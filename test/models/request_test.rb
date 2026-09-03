@@ -131,6 +131,18 @@ class RequestTest < ActiveSupport::TestCase
     assert_equal "pending", request.reload.status
   end
 
+  test "with_status filters by a known status and ignores blank or unknown values" do
+    assert_equal [ requests(:three) ], Request.with_status("deferred").to_a
+    assert_equal Request.count, Request.with_status(nil).count
+    assert_equal Request.count, Request.with_status("bogus").count
+  end
+
+  test "with_urgency filters by a known urgency and ignores blank or unknown values" do
+    assert_equal [ requests(:one) ], Request.with_urgency("high").to_a
+    assert_equal Request.count, Request.with_urgency("").count
+    assert_equal Request.count, Request.with_urgency("critical").count
+  end
+
   test "status outside the known states is a validation error, not an exception" do
     request = requests(:one).dup
     assert_nothing_raised { request.status = "approved" }
