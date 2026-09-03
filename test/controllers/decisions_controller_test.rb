@@ -53,7 +53,7 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
-    assert_includes response.body, "Decision type can&#39;t be blank"
+    assert_includes response.body, "Decision is missing. Choose accept, defer, or decline."
     assert_equal "pending", request.reload.status
   end
 

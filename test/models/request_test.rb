@@ -25,7 +25,7 @@ class RequestTest < ActiveSupport::TestCase
     request = requests(:one).dup
     assert_nothing_raised { request.urgency = "critical" }
     assert_not request.valid?
-    assert request.errors[:urgency].any?
+    assert_includes request.errors.full_messages, "Urgency must be low, medium, or high"
   end
 
   test "status defaults to pending" do

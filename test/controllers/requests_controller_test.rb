@@ -129,6 +129,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
+    assert_includes response.body, "This request couldn't be saved:"
     assert_includes response.body, "Title can&#39;t be blank"
     assert_includes response.body, "Problem statement can&#39;t be blank"
     assert_includes response.body, "Expected impact can&#39;t be blank"

@@ -23,7 +23,7 @@ class DecisionTest < ActiveSupport::TestCase
     decision = decisions(:deferred_three).dup
     assert_nothing_raised { decision.decision_type = "approved" }
     assert_not decision.valid?
-    assert decision.errors[:decision_type].any?
+    assert_includes decision.errors.full_messages, "Decision must be accept, defer, or decline"
   end
 
   test "a decision must belong to a request" do

@@ -56,7 +56,7 @@
     <%= form_with(model: [ @request, @decision ], class: "contents") do |form| %>
       <% if @decision.errors.any? %>
         <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
-          <h3><%= pluralize(@decision.errors.count, "error") %> prohibited this decision from being saved:</h3>
+          <h3>This decision couldn't be saved:</h3>
           <ul class="list-disc ml-6">
             <% @decision.errors.each do |error| %>
               <li><%= error.full_message %></li>
