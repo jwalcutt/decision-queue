@@ -57,6 +57,46 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "pending", request.reload.status
   end
 
+  test "deciding an accepted request is rejected and changes nothing" do
+    accepted = Request.create!(
+      title: "Already accepted", problem_statement: "x", expected_impact: "y",
+      urgency: "low", status: "accepted"
+    )
+
+    assert_no_difference("Decision.count") do
+      post request_decisions_url(accepted), params: { decision: { decision_type: "declined", reason: "Second thoughts." } }
+    end
+
+    assert_response :unprocessable_content
+    assert_includes response.body, "decisions are final"
+    assert_equal "accepted", accepted.reload.status
+  end
+
+  test "a deferred request can be decided again from its page" do
+    deferred = requests(:three)
+
+    assert_difference("Decision.count", 1) do
+      post request_decisions_url(deferred), params: { decision: { decision_type: "accepted", reason: "Ready now." } }
+    end
+
+    assert_redirected_to root_url
+    assert_equal "accepted", deferred.reload.status
+    assert_equal 2, deferred.decisions.count
+  end
+
+  test "the decision form is shown for deferred requests and hidden for final ones" do
+    get request_url(requests(:three))
+    assert_select "form[action=?]", request_decisions_path(requests(:three))
+
+    accepted = Request.create!(
+      title: "Already accepted", problem_statement: "x", expected_impact: "y",
+      urgency: "low", status: "accepted"
+    )
+    get request_url(accepted)
+    assert_select "form[action=?]", request_decisions_path(accepted), 0
+    assert_includes response.body, "decisions are final"
+  end
+
   test "the request page shows its decision history" do
     get request_url(requests(:three))
 

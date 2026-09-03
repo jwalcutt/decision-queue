@@ -86,6 +86,51 @@ class RequestTest < ActiveSupport::TestCase
     assert_equal "pending", request.reload.status
   end
 
+  test "pending and deferred requests are decidable, accepted and declined are not" do
+    assert requests(:one).decidable?
+    assert requests(:three).decidable?
+    assert_not queued(urgency: "low", status: "accepted", created_at: 1.day.ago).decidable?
+    assert_not queued(urgency: "low", status: "declined", created_at: 1.day.ago).decidable?
+  end
+
+  test "accepted and declined requests cannot be decided again" do
+    %w[accepted declined].each do |terminal|
+      request = queued(urgency: "low", status: terminal, created_at: 1.day.ago)
+
+      decision = nil
+      assert_no_difference("Decision.count") do
+        decision = request.decide(decision_type: "deferred", reason: "Second thoughts.")
+      end
+
+      assert_not decision.persisted?
+      assert_includes decision.errors[:base].join, "decisions are final"
+      assert_equal terminal, request.reload.status
+    end
+  end
+
+  test "a deferred request can be decided again and keeps its history" do
+    request = requests(:three)
+
+    decision = request.decide(decision_type: "accepted", reason: "The dashboard rework shipped; this is next.")
+
+    assert decision.persisted?
+    assert_equal "accepted", request.reload.status
+    assert_equal %w[deferred accepted], request.decisions.map(&:decision_type)
+  end
+
+  test "the decision and the status change succeed or fail together" do
+    request = requests(:one)
+    request.define_singleton_method(:update!) { |*| raise ActiveRecord::RecordInvalid }
+
+    assert_no_difference("Decision.count") do
+      assert_raises(ActiveRecord::RecordInvalid) do
+        request.decide(decision_type: "accepted", reason: "Should roll back.")
+      end
+    end
+
+    assert_equal "pending", request.reload.status
+  end
+
   test "status outside the known states is a validation error, not an exception" do
     request = requests(:one).dup
     assert_nothing_raised { request.status = "approved" }

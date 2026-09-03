@@ -50,6 +50,7 @@
   </section>
 
   <section id="decision_form" class="my-8">
+    <% if @request.decidable? %>
     <h2 class="font-bold text-2xl mb-3">Record a decision</h2>
 
     <%= form_with(model: [ @request, @decision ], class: "contents") do |form| %>
@@ -84,6 +85,9 @@
       <div class="inline">
         <%= form.submit "Record decision", class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
       </div>
+    <% end %>
+    <% else %>
+    <p class="text-gray-500">This request is <%= @request.status %>. Accepted and declined decisions are final.</p>
     <% end %>
   </section>
 

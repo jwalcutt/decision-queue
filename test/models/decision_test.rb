@@ -33,6 +33,24 @@ class DecisionTest < ActiveSupport::TestCase
     assert decision.errors[:request].any?
   end
 
+  test "a decision on an accepted or declined request is invalid" do
+    decided = Request.create!(
+      title: "Already settled", problem_statement: "x", expected_impact: "y",
+      urgency: "low", status: "accepted"
+    )
+
+    decision = Decision.new(request: decided, decision_type: "declined", reason: "Changed our minds.")
+
+    assert_not decision.valid?
+    assert_includes decision.errors[:base].join, "decisions are final"
+  end
+
+  test "a decision on a deferred request is valid" do
+    decision = Decision.new(request: requests(:three), decision_type: "accepted", reason: "Ready now.")
+
+    assert decision.valid?
+  end
+
   test "a request lists its decisions" do
     assert_includes requests(:three).decisions, decisions(:deferred_three)
   end

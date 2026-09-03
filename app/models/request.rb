@@ -23,11 +23,17 @@ class Request < ApplicationRecord
       .order(:created_at)
   }
 
+  # Accepted and declined are final in v1; pending and deferred can still be decided.
+  def decidable?
+    pending? || deferred?
+  end
+
   # Records a decision and moves the request to that state, or does neither.
   # Always returns the decision; an unsaved one carries the validation errors.
+  # The row lock means two simultaneous decisions can't both pass the guard.
   def decide(decision_type:, reason:)
     decision = Decision.new(request: self, decision_type: decision_type, reason: reason)
-    transaction do
+    with_lock do
       update!(status: decision.decision_type) if decision.save
     end
     decision
