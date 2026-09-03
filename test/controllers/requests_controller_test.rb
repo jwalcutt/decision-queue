@@ -98,6 +98,32 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(status: "deferred", urgency: "high", sort: "newest")
   end
 
+  test "queue rows show urgency and status as badges" do
+    get root_url
+
+    assert_select "##{dom_id(requests(:one))} [data-urgency='high']", "High"
+    assert_select "##{dom_id(requests(:one))} [data-status='pending']", "Pending"
+  end
+
+  test "a filtered queue with no matches shows the empty state and a way out" do
+    get root_url, params: { status: "declined" }
+
+    assert_select "tbody tr", 0
+    assert_select "#empty_state", /No requests match these filters/
+    assert_select "#empty_state a[href=?]", root_path, "Clear filters"
+  end
+
+  test "an empty queue prompts for the first request" do
+    Decision.delete_all
+    Request.delete_all
+
+    get root_url
+
+    assert_select "#empty_state", /No requests yet/
+    assert_select "#empty_state a[href=?]", new_request_path, "Create the first request"
+    assert_select "#status_counts dd", text: "0", count: 4
+  end
+
   test "queue shows a count for every status" do
     queued(urgency: "medium", status: "deferred", created_at: 1.day.ago)
     queued(urgency: "medium", status: "accepted", created_at: 1.day.ago)

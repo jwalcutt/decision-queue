@@ -1,10 +1,4 @@
 <% content_for :title, @request.title %>
-<% status_classes = {
-     "pending" => "bg-gray-800 text-gray-200",
-     "accepted" => "bg-green-950 text-green-300",
-     "deferred" => "bg-amber-950 text-amber-300",
-     "declined" => "bg-red-950 text-red-300"
-   } %>
 
 <div class="md:w-2/3 w-full">
   <% if notice.present? %>
@@ -14,8 +8,8 @@
   <h1 class="font-bold text-4xl"><%= @request.title %></h1>
 
   <p class="mt-3 flex items-center gap-3 text-sm">
-    <span id="status" class="rounded-full px-2.5 py-0.5 font-medium <%= status_classes[@request.status] %>"><%= @request.status.humanize %></span>
-    <span>Urgency: <strong class="font-medium"><%= @request.urgency.humanize %></strong></span>
+    <%= status_badge(@request.status, id: "status") %>
+    <%= urgency_badge(@request.urgency) %>
     <span class="text-gray-400">Submitted <time datetime="<%= @request.created_at.iso8601 %>"><%= @request.created_at.to_fs(:long) %></time></span>
   </p>
 

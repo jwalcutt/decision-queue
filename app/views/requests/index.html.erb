@@ -14,8 +14,8 @@
 
   <dl id="status_counts" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
     <% @status_counts.each do |status, count| %>
-      <%= link_to root_path(**{ status: status, urgency: params[:urgency].presence, sort: params[:sort].presence }.compact), data: { status: status }, class: "block rounded-md border border-gray-800 px-4 py-3 hover:bg-gray-900" do %>
-        <dt class="text-sm text-gray-400"><%= status.humanize %></dt>
+      <%= link_to root_path(**{ status: status, urgency: params[:urgency].presence, sort: params[:sort].presence }.compact), data: { status: status }, class: "block rounded-md border px-4 py-3 #{status_card_classes(status)}" do %>
+        <dt class="text-sm opacity-80"><%= status.humanize %></dt>
         <dd class="text-2xl font-semibold"><%= count %></dd>
       <% end %>
     <% end %>
@@ -58,14 +58,22 @@
         <% @requests.each do |queued_request| %>
           <tr id="<%= dom_id queued_request %>">
             <td class="py-3 pr-4 font-medium"><%= link_to queued_request.title, queued_request, class: "hover:underline" %></td>
-            <td class="py-3 pr-4"><%= queued_request.urgency.humanize %></td>
-            <td class="py-3 pr-4"><%= queued_request.status.humanize %></td>
+            <td class="py-3 pr-4"><%= urgency_badge(queued_request.urgency) %></td>
+            <td class="py-3 pr-4"><%= status_badge(queued_request.status) %></td>
             <td class="py-3 text-gray-400"><%= queued_request.created_at.to_date %></td>
           </tr>
         <% end %>
       </tbody>
     </table>
   <% else %>
-    <p class="text-center my-10"><%= filtering ? "No requests match these filters." : "No requests yet." %></p>
+    <div id="empty_state" class="text-center my-10 space-y-3">
+      <% if filtering %>
+        <p class="text-gray-400">No requests match these filters.</p>
+        <%= link_to "Clear filters", root_path, class: "text-blue-400 hover:underline" %>
+      <% else %>
+        <p class="text-gray-400">No requests yet.</p>
+        <%= link_to "Create the first request", new_request_path, class: "text-blue-400 hover:underline" %>
+      <% end %>
+    </div>
   <% end %>
 </div>
