@@ -1,0 +1,14 @@
+FROM ruby:3.3
+
+WORKDIR /app
+
+# bin/dev installs foreman on every boot if it is missing; bake it in once.
+RUN gem install foreman --no-document
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+COPY . .
+
+ENTRYPOINT ["bin/docker-entrypoint-dev"]
+CMD ["bin/dev"]
