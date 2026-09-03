@@ -147,14 +147,29 @@ class RequestTest < ActiveSupport::TestCase
     accepted_high = queued(urgency: "high", status: "accepted", created_at: 5.days.ago)
     declined_low = queued(urgency: "low", status: "declined", created_at: 1.day.ago)
 
-    expected = [ accepted_high, requests(:one), requests(:three), requests(:two), declined_low ]
-    assert_equal expected.map(&:id), Request.sorted_by("urgency").pluck(:id)
+    # "Ascending" urgency is high first, so the first header click gives the usual order.
+    high_first = [ accepted_high, requests(:one), requests(:three), requests(:two), declined_low ]
+    assert_equal high_first.map(&:id), Request.sorted_by("urgency_asc").pluck(:id)
+
+    low_first = [ requests(:three), requests(:two), declined_low, accepted_high, requests(:one) ]
+    assert_equal low_first.map(&:id), Request.sorted_by("urgency_desc").pluck(:id)
   end
 
-  test "sorted_by newest and oldest order by creation time" do
+  test "sorted_by status walks the states in order, oldest first within each" do
+    accepted = queued(urgency: "low", status: "accepted", created_at: 5.days.ago)
+    declined = queued(urgency: "high", status: "declined", created_at: 1.day.ago)
+
+    pending_first = [ requests(:one), requests(:two), requests(:three), accepted, declined ]
+    assert_equal pending_first.map(&:id), Request.sorted_by("status_asc").pluck(:id)
+
+    declined_first = [ declined, accepted, requests(:three), requests(:one), requests(:two) ]
+    assert_equal declined_first.map(&:id), Request.sorted_by("status_desc").pluck(:id)
+  end
+
+  test "sorted_by submitted orders by creation time in either direction" do
     newest = [ requests(:two), requests(:one), requests(:three) ].map(&:id)
-    assert_equal newest, Request.sorted_by("newest").pluck(:id)
-    assert_equal newest.reverse, Request.sorted_by("oldest").pluck(:id)
+    assert_equal newest, Request.sorted_by("submitted_desc").pluck(:id)
+    assert_equal newest.reverse, Request.sorted_by("submitted_asc").pluck(:id)
   end
 
   test "sorted_by falls back to queue order for blank or unknown sorts" do

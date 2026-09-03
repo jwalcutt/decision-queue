@@ -21,6 +21,37 @@ module ApplicationHelper
     "low" => "bg-sky-950 text-sky-300"
   }.freeze
 
+  # Column-header sort toggles cycle none -> ascending -> descending -> none.
+  NEXT_SORT_DIRECTION = { nil => "asc", "asc" => "desc", "desc" => nil }.freeze
+  SORT_GLYPH = { nil => "\u2195", "asc" => "\u2191", "desc" => "\u2193" }.freeze
+  ARIA_SORT = { "asc" => "ascending", "desc" => "descending" }.freeze
+
+  # "asc", "desc", or nil: how the queue is currently sorted on this field.
+  def sort_direction(field)
+    params[:sort].to_s[/\A#{field}_(asc|desc)\z/, 1]
+  end
+
+  # A <th> whose toggle link moves the sort to the next state for this field,
+  # keeping the active filters. Deselecting drops the sort back to queue order.
+  def sort_header(field, label, **options)
+    direction = sort_direction(field)
+    next_direction = NEXT_SORT_DIRECTION[direction]
+    query = {
+      status: params[:status].presence,
+      urgency: params[:urgency].presence,
+      sort: next_direction && "#{field}_#{next_direction}"
+    }.compact
+    description = next_direction ? "Sort by #{label.downcase}, #{next_direction == "asc" ? "ascending" : "descending"}" : "Clear #{label.downcase} sort"
+    toggle = link_to(SORT_GLYPH[direction], root_path(**query),
+      "aria-label": description, title: description,
+      data: { sort: field, direction: direction },
+      class: [ "ml-1 px-1 rounded", direction ? "text-blue-400" : "text-gray-500 hover:text-gray-200" ])
+
+    tag.th(**options, "aria-sort": ARIA_SORT[direction], data: { sort: field }) do
+      safe_join([ label, toggle ])
+    end
+  end
+
   def status_badge(status, **options)
     badge(status.humanize, STATUS_BADGE.fetch(status), data: { status: status }, **options)
   end

@@ -68,16 +68,16 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "sort control reorders the rows and marks the select" do
-    get root_url, params: { sort: "newest" }
+    get root_url, params: { sort: "submitted_desc" }
 
     assert_equal [ requests(:two), requests(:one), requests(:three) ].map { |r| dom_id(r) },
       css_select("tbody tr").map { |tr| tr["id"] }
-    assert_select "select[name='sort'] option[selected][value='newest']"
+    assert_select "select[name='sort'] option[selected][value='submitted_desc']"
     assert_select "a", "Clear"
   end
 
   test "sort and filter combine" do
-    get root_url, params: { sort: "urgency", status: "pending" }
+    get root_url, params: { sort: "urgency_asc", status: "pending" }
 
     assert_equal [ dom_id(requests(:one)), dom_id(requests(:two)) ], css_select("tbody tr").map { |tr| tr["id"] }
   end
@@ -93,9 +93,32 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "count links keep the current urgency and sort" do
-    get root_url, params: { urgency: "high", sort: "newest" }
+    get root_url, params: { urgency: "high", sort: "submitted_desc" }
 
-    assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(status: "deferred", urgency: "high", sort: "newest")
+    assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(status: "deferred", urgency: "high", sort: "submitted_desc")
+  end
+
+  test "column header toggles cycle through ascending, descending, and no sort" do
+    get root_url
+    assert_select "th[data-sort='urgency']:not([aria-sort]) a[href=?]", root_path(sort: "urgency_asc")
+    assert_select "th[data-sort='status'] a[href=?]", root_path(sort: "status_asc")
+    assert_select "th[data-sort='submitted'] a[href=?]", root_path(sort: "submitted_asc")
+
+    get root_url, params: { sort: "urgency_asc" }
+    assert_select "th[data-sort='urgency'][aria-sort='ascending'] a[href=?]", root_path(sort: "urgency_desc")
+    assert_equal [ requests(:one), requests(:three), requests(:two) ].map { |r| dom_id(r) },
+      css_select("tbody tr").map { |tr| tr["id"] }
+
+    get root_url, params: { sort: "urgency_desc" }
+    assert_select "th[data-sort='urgency'][aria-sort='descending'] a[href=?]", root_path
+    assert_select "th[data-sort='status']:not([aria-sort]) a[href=?]", root_path(sort: "status_asc")
+  end
+
+  test "column header toggles keep the active filters" do
+    get root_url, params: { status: "pending", urgency: "high", sort: "status_desc" }
+
+    assert_select "th[data-sort='status'] a[href=?]", root_path(status: "pending", urgency: "high")
+    assert_select "th[data-sort='submitted'] a[href=?]", root_path(status: "pending", urgency: "high", sort: "submitted_asc")
   end
 
   test "queue rows show urgency and status as badges" do
@@ -133,11 +156,11 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "active filters render as chips that can be removed one at a time" do
-    get root_url, params: { status: "deferred", sort: "newest" }
+    get root_url, params: { status: "deferred", sort: "submitted_desc" }
 
     assert_select "#active_filters [data-chip]", 2
     assert_select "#active_filters [data-chip='status']", /Status: Deferred/
-    assert_select "#active_filters [data-chip='status'] a[href=?]", root_path(sort: "newest")
+    assert_select "#active_filters [data-chip='status'] a[href=?]", root_path(sort: "submitted_desc")
     assert_select "#active_filters [data-chip='sort']", /Sort: Newest first/
     assert_select "#active_filters [data-chip='sort'] a[href=?]", root_path(status: "deferred")
     assert_select "#active_filters [data-chip='urgency']", 0

@@ -3,11 +3,17 @@ class Request < ApplicationRecord
 
   STATUS_ORDER = %w[pending deferred accepted declined].freeze
   URGENCY_ORDER = %w[high medium low].freeze
+  # Sort names are "<field>_<direction>" so the column-header toggles and the
+  # sort select speak the same vocabulary. Anything else means queue order.
+  # Urgency "ascending" is high first: the header toggle's first click should
+  # land on the order people almost always want.
   SORTS = {
-    "queue" => :queue_order,
-    "urgency" => :urgency_order,
-    "newest" => :newest_first,
-    "oldest" => :oldest_first
+    "urgency_asc" => :urgency_high_first,
+    "urgency_desc" => :urgency_low_first,
+    "status_asc" => :status_pending_first,
+    "status_desc" => :status_declined_first,
+    "submitted_desc" => :newest_first,
+    "submitted_asc" => :oldest_first
   }.freeze
 
   enum :urgency, { low: "low", medium: "medium", high: "high" }, validate: { allow_nil: true }
@@ -32,7 +38,10 @@ class Request < ApplicationRecord
       .in_order_of(:urgency, URGENCY_ORDER, filter: false)
       .order(:created_at, :id)
   }
-  scope :urgency_order, -> { in_order_of(:urgency, URGENCY_ORDER, filter: false).order(:created_at, :id) }
+  scope :urgency_high_first, -> { in_order_of(:urgency, URGENCY_ORDER, filter: false).order(:created_at, :id) }
+  scope :urgency_low_first, -> { in_order_of(:urgency, URGENCY_ORDER.reverse, filter: false).order(:created_at, :id) }
+  scope :status_pending_first, -> { in_order_of(:status, STATUS_ORDER, filter: false).order(:created_at, :id) }
+  scope :status_declined_first, -> { in_order_of(:status, STATUS_ORDER.reverse, filter: false).order(:created_at, :id) }
   scope :newest_first, -> { order(created_at: :desc, id: :desc) }
   scope :oldest_first, -> { order(:created_at, :id) }
 
