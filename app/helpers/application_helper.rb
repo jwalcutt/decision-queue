@@ -36,11 +36,7 @@ module ApplicationHelper
   def sort_header(field, label, **options)
     direction = sort_direction(field)
     next_direction = NEXT_SORT_DIRECTION[direction]
-    query = {
-      status: params[:status].presence,
-      urgency: params[:urgency].presence,
-      sort: next_direction && "#{field}_#{next_direction}"
-    }.compact
+    query = queue_query(sort: next_direction && "#{field}_#{next_direction}")
     description = next_direction ? "Sort by #{label.downcase}, #{next_direction == "asc" ? "ascending" : "descending"}" : "Clear #{label.downcase} sort"
     toggle = link_to(SORT_GLYPH[direction], root_path(**query),
       "aria-label": description, title: description,
@@ -50,6 +46,26 @@ module ApplicationHelper
     tag.th(**options, "aria-sort": ARIA_SORT[direction], data: { sort: field }) do
       safe_join([ label, toggle ])
     end
+  end
+
+  # The queue's current view parameters (filters, sort, rows per page), with
+  # blanks dropped. Rows per page is the sanitized value the controller settled
+  # on, and the default is left out so plain URLs stay plain. Pass overrides to
+  # change or remove keys when building links.
+  def queue_query(**overrides)
+    per_page = @per_page unless @per_page.nil? || @per_page == RequestsController::PER_PAGE_DEFAULT
+    {
+      status: params[:status].presence,
+      urgency: params[:urgency].presence,
+      sort: params[:sort].presence,
+      per_page: per_page
+    }.merge(overrides).compact
+  end
+
+  # Link to a page of the queue, keeping the active filters, sort, and page size.
+  # Page 1 carries no page param so the plain queue URL stays canonical.
+  def queue_page_path(page)
+    root_path(**queue_query(page: (page if page > 1)))
   end
 
   def status_badge(status, **options)

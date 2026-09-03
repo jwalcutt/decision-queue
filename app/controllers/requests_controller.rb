@@ -1,10 +1,17 @@
 class RequestsController < ApplicationController
+  PER_PAGE_DEFAULT = 10
+  PER_PAGE_MAX = 100
+
   before_action :set_request, only: %i[ show edit update destroy ]
   before_action :require_pending, only: %i[ edit update destroy ]
 
   # GET /requests
   def index
-    @requests = Request.with_status(params[:status]).with_urgency(params[:urgency]).sorted_by(params[:sort])
+    scope = Request.with_status(params[:status]).with_urgency(params[:urgency]).sorted_by(params[:sort])
+    @per_page = per_page
+    @page_count = [ (scope.count.to_f / @per_page).ceil, 1 ].max
+    @page = params[:page].to_i.clamp(1, @page_count)
+    @requests = scope.offset((@page - 1) * @per_page).limit(@per_page)
     @status_counts = Request.status_counts
   end
 
@@ -49,6 +56,12 @@ class RequestsController < ApplicationController
   end
 
   private
+    # Blank or junk falls back to the default; anything else is capped.
+    def per_page
+      requested = params[:per_page].to_i
+      requested.positive? ? requested.clamp(1, PER_PAGE_MAX) : PER_PAGE_DEFAULT
+    end
+
     def set_request
       @request = Request.find(params.expect(:id))
     end

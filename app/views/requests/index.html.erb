@@ -22,14 +22,13 @@
 
   <dl id="status_counts" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
     <% @status_counts.each do |status, count| %>
-      <%= link_to root_path(**{ status: status, urgency: params[:urgency].presence, sort: params[:sort].presence }.compact), data: { status: status }, class: "block rounded-md border px-4 py-3 #{status_card_classes(status)}" do %>
+      <%= link_to root_path(**queue_query(status: status)), data: { status: status }, class: "block rounded-md border px-4 py-3 #{status_card_classes(status)}" do %>
         <dt class="text-sm opacity-80"><%= status.humanize %></dt>
         <dd class="text-2xl font-semibold"><%= count %></dd>
       <% end %>
     <% end %>
   </dl>
 
-  <% current = { status: params[:status].presence, urgency: params[:urgency].presence, sort: params[:sort].presence }.compact %>
   <% chips = [
        [ :status, "Status", params[:status].presence&.humanize ],
        [ :urgency, "Urgency", params[:urgency].presence&.humanize ],
@@ -43,19 +42,20 @@
       <% chips.each do |key, label, value| %>
         <span data-chip="<%= key %>" class="inline-flex items-center gap-1.5 rounded-full border border-gray-700 bg-gray-900 pl-3 pr-1.5 py-1 text-sm">
           <%= label %>: <%= value %>
-          <%= link_to "×", root_path(**current.except(key)), "aria-label": "Remove #{label.downcase} filter", class: "rounded-full px-1.5 text-gray-400 hover:bg-gray-700 hover:text-gray-100" %>
+          <%= link_to "×", root_path(**queue_query(key => nil)), "aria-label": "Remove #{label.downcase} filter", class: "rounded-full px-1.5 text-gray-400 hover:bg-gray-700 hover:text-gray-100" %>
         </span>
       <% end %>
     </div>
 
     <% if filtering %>
-      <%= link_to "Clear", root_path, data: { controller: "escape-link", action: "keydown.esc@window->escape-link#follow" }, class: "px-2 py-2.5 text-blue-400 hover:underline" %>
+      <%= link_to "Clear", root_path(**queue_query(status: nil, urgency: nil, sort: nil)), data: { controller: "escape-link", action: "keydown.esc@window->escape-link#follow" }, class: "px-2 py-2.5 text-blue-400 hover:underline" %>
     <% end %>
 
     <dialog data-dialog-target="dialog" data-action="click->dialog#closeOnBackdrop keydown.esc->dialog#close" class="m-auto w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 text-gray-100 backdrop:bg-black/60">
       <h2 class="font-bold text-2xl mb-4">Filter and sort</h2>
 
       <%= form_with url: root_path, method: :get, id: "filters", class: "space-y-4" do %>
+        <% queue_query.slice(:per_page).each { |key, value| concat hidden_field_tag(key, value) } %>
         <div>
           <%= label_tag :status, "Status", class: "block text-sm text-gray-400 mb-1" %>
           <%= select_tag :status,
@@ -103,6 +103,37 @@
         <% end %>
       </tbody>
     </table>
+
+    <div class="flex flex-wrap items-center justify-between gap-4 mt-6 text-sm">
+      <%= form_with url: root_path, method: :get, id: "per_page", data: { controller: "autosubmit" }, class: "flex items-center gap-2" do %>
+        <% queue_query(per_page: nil).each { |key, value| concat hidden_field_tag(key, value) } %>
+        <%= label_tag :per_page, "Rows per page", class: "text-gray-400" %>
+        <%= number_field_tag :per_page, @per_page, list: "per_page_options", min: 1, max: RequestsController::PER_PAGE_MAX, step: 1,
+              data: { action: "change->autosubmit#submit" },
+              class: "w-20 rounded-md border border-gray-600 bg-gray-900 px-2 py-1" %>
+        <datalist id="per_page_options">
+          <option value="10"></option>
+          <option value="25"></option>
+          <option value="50"></option>
+        </datalist>
+      <% end %>
+
+      <% if @page_count > 1 %>
+        <nav id="pagination" aria-label="Pages" class="flex items-center gap-3">
+          <% if @page > 1 %>
+            <%= link_to "←", queue_page_path(@page - 1), rel: "prev", "aria-label": "Previous page", title: "Previous page", class: "rounded-md px-3 py-1.5 bg-gray-800 hover:bg-gray-700 font-medium" %>
+          <% else %>
+            <span class="rounded-md px-3 py-1.5 bg-gray-900 text-gray-600" aria-hidden="true">←</span>
+          <% end %>
+          <span class="text-gray-400">Page <%= @page %> of <%= @page_count %></span>
+          <% if @page < @page_count %>
+            <%= link_to "→", queue_page_path(@page + 1), rel: "next", "aria-label": "Next page", title: "Next page", class: "rounded-md px-3 py-1.5 bg-gray-800 hover:bg-gray-700 font-medium" %>
+          <% else %>
+            <span class="rounded-md px-3 py-1.5 bg-gray-900 text-gray-600" aria-hidden="true">→</span>
+          <% end %>
+        </nav>
+      <% end %>
+    </div>
   <% else %>
     <div id="empty_state" class="text-center my-10 space-y-3">
       <% if filtering %>

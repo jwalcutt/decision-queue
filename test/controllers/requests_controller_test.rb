@@ -231,6 +231,89 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?] button", request_path(requests(:three)), 0
   end
 
+  test "page 2 returns the rows after the first ten in queue order" do
+    fill_two_pages
+
+    get root_url, params: { page: 2 }
+
+    expected = Request.sorted_by(nil).pluck(:id)[10, 10].map { |id| "request_#{id}" }
+    assert_equal expected, css_select("tbody tr").map { |tr| tr["id"] }
+    assert_select "#pagination", /Page 2 of 2/
+    assert_select "#pagination a[rel='prev']", 1
+    assert_select "#pagination a[rel='next']", 0
+  end
+
+  test "pagination links keep the active filters and sort" do
+    fill_two_pages
+
+    get root_url, params: { status: "pending", sort: "submitted_asc" }
+
+    assert_select "#pagination a[rel='next'][href=?]", root_path(status: "pending", sort: "submitted_asc", page: 2)
+  end
+
+  test "out-of-range and junk page numbers clamp to a real page" do
+    fill_two_pages
+
+    get root_url, params: { page: 2 }
+    last_page_rows = css_select("tbody tr").map { |tr| tr["id"] }
+
+    get root_url, params: { page: 99 }
+    assert_equal last_page_rows, css_select("tbody tr").map { |tr| tr["id"] }
+    assert_select "#pagination", /Page 2 of 2/
+
+    [ "abc", 0, -3 ].each do |junk|
+      get root_url, params: { page: junk }
+      assert_select "#pagination", /Page 1 of 2/
+      assert_select "#pagination a[rel='prev']", 0
+    end
+  end
+
+  test "status counts cover the whole queue on every page" do
+    fill_two_pages
+
+    get root_url, params: { page: 2 }
+
+    assert_select "#status_counts [data-status='pending'] dd", Request.pending.count.to_s
+  end
+
+  test "no page links when everything fits, but the rows-per-page control is still there" do
+    get root_url
+
+    assert_select "#pagination", 0
+    assert_select "form#per_page input[name='per_page'][value='10']"
+  end
+
+  test "rows per page can be chosen, is capped, and falls back to ten on junk" do
+    fill_two_pages
+
+    get root_url, params: { per_page: 25 }
+    assert_select "tbody tr", 15
+    assert_select "#pagination", 0
+    assert_select "form#per_page input[name='per_page'][value='25']"
+
+    get root_url, params: { per_page: 500 }
+    assert_select "form#per_page input[name='per_page'][value='100']"
+    assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(per_page: 100, status: "deferred")
+
+    get root_url, params: { per_page: 10, page: 2 }
+    assert_select "#pagination a[rel='prev'][href=?]", root_path
+
+    get root_url, params: { per_page: "abc" }
+    assert_select "tbody tr", 10
+    assert_select "form#per_page input[name='per_page'][value='10']"
+  end
+
+  test "rows per page travels with page, filter, and sort links" do
+    fill_two_pages
+
+    get root_url, params: { per_page: 5, status: "pending" }
+
+    assert_select "#pagination a[rel='next'][href=?]", root_path(page: 2, per_page: 5, status: "pending")
+    assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(per_page: 5, status: "deferred")
+    assert_select "form#per_page input[type='hidden'][name='status'][value='pending']"
+    assert_select "form#filters input[type='hidden'][name='per_page'][value='5']"
+  end
+
   test "queue shows a count for every status" do
     queued(urgency: "medium", status: "deferred", created_at: 1.day.ago)
     queued(urgency: "medium", status: "accepted", created_at: 1.day.ago)
@@ -293,6 +376,11 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    # Fixtures give three rows; twelve more make two pages of ten.
+    def fill_two_pages
+      12.times { |n| queued(urgency: "low", status: "pending", created_at: (n + 10).days.ago) }
+    end
+
     def queued(urgency:, status:, created_at:)
       Request.create!(
         title: "#{status} #{urgency} request",
