@@ -172,6 +172,20 @@ class RequestTest < ActiveSupport::TestCase
     assert_equal newest.reverse, Request.sorted_by("submitted_asc").pluck(:id)
   end
 
+  test "sorted_by title and organization order alphabetically ignoring case, either direction" do
+    # Lowercase title: a case-sensitive sort would put it after every capitalised fixture.
+    lowercase = queued(urgency: "low", status: "pending", created_at: 1.day.ago)
+    assert_equal "pending low request", lowercase.title
+
+    a_to_z = [ requests(:one), requests(:two), lowercase, requests(:three) ]
+    assert_equal a_to_z.map(&:id), Request.sorted_by("title_asc").pluck(:id)
+    assert_equal a_to_z.reverse.map(&:id), Request.sorted_by("title_desc").pluck(:id)
+
+    by_organization = [ requests(:two), requests(:three), requests(:one), lowercase ]
+    assert_equal by_organization.map(&:id), Request.sorted_by("organization_asc").pluck(:id)
+    assert_equal by_organization.reverse.map(&:id), Request.sorted_by("organization_desc").pluck(:id)
+  end
+
   test "sorted_by falls back to queue order for blank or unknown sorts" do
     assert_equal Request.queue_order.pluck(:id), Request.sorted_by(nil).pluck(:id)
     assert_equal Request.queue_order.pluck(:id), Request.sorted_by("bogus").pluck(:id)

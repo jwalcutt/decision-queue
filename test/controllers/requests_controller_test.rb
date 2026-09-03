@@ -101,6 +101,8 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
 
   test "column header toggles cycle through ascending, descending, and no sort" do
     get root_url
+    assert_select "th[data-sort='title']:not([aria-sort]) a[href=?]", root_path(sort: "title_asc")
+    assert_select "th[data-sort='organization']:not([aria-sort]) a[href=?]", root_path(sort: "organization_asc")
     assert_select "th[data-sort='urgency']:not([aria-sort]) a[href=?]", root_path(sort: "urgency_asc")
     assert_select "th[data-sort='status'] a[href=?]", root_path(sort: "status_asc")
     assert_select "th[data-sort='submitted'] a[href=?]", root_path(sort: "submitted_asc")
@@ -113,6 +115,12 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     get root_url, params: { sort: "urgency_desc" }
     assert_select "th[data-sort='urgency'][aria-sort='descending'] a[href=?]", root_path
     assert_select "th[data-sort='status']:not([aria-sort]) a[href=?]", root_path(sort: "status_asc")
+
+    get root_url, params: { sort: "title_desc" }
+    assert_select "th[data-sort='title'][aria-sort='descending'] a[href=?]", root_path
+    assert_select "#active_filters [data-chip='sort']", /Sort: Title: Z to A/
+    assert_equal [ requests(:three), requests(:two), requests(:one) ].map { |r| dom_id(r) },
+      css_select("tbody tr").map { |tr| tr["id"] }
   end
 
   test "column header toggles keep the active filters" do

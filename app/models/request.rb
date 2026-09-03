@@ -9,6 +9,10 @@ class Request < ApplicationRecord
   # land on the order people almost always want.
   CONTENT_ATTRIBUTES = %w[title organization problem_statement expected_impact urgency].freeze
   SORTS = {
+    "title_asc" => :title_a_to_z,
+    "title_desc" => :title_z_to_a,
+    "organization_asc" => :organization_a_to_z,
+    "organization_desc" => :organization_z_to_a,
     "urgency_asc" => :urgency_high_first,
     "urgency_desc" => :urgency_low_first,
     "status_asc" => :status_pending_first,
@@ -44,6 +48,11 @@ class Request < ApplicationRecord
       .in_order_of(:urgency, URGENCY_ORDER, filter: false)
       .order(:created_at, :id)
   }
+  # Alphabetical sorts ignore case so the database collation can't split "acme" from "Acme".
+  scope :title_a_to_z, -> { order(arel_table[:title].lower.asc, :created_at, :id) }
+  scope :title_z_to_a, -> { order(arel_table[:title].lower.desc, :created_at, :id) }
+  scope :organization_a_to_z, -> { order(arel_table[:organization].lower.asc, :created_at, :id) }
+  scope :organization_z_to_a, -> { order(arel_table[:organization].lower.desc, :created_at, :id) }
   scope :urgency_high_first, -> { in_order_of(:urgency, URGENCY_ORDER, filter: false).order(:created_at, :id) }
   scope :urgency_low_first, -> { in_order_of(:urgency, URGENCY_ORDER.reverse, filter: false).order(:created_at, :id) }
   scope :status_pending_first, -> { in_order_of(:status, STATUS_ORDER, filter: false).order(:created_at, :id) }
