@@ -1,6 +1,6 @@
 <% content_for :title, "Decision queue" %>
 <% filtering = params[:status].present? || params[:urgency].present? || params[:sort].present? %>
-<% sort_options = [ [ "Queue order", "queue" ], [ "Urgency", "urgency" ], [ "Newest first", "newest" ], [ "Oldest first", "oldest" ] ] %>
+<% sort_options = [ [ "Queue order", "" ], [ "Urgency", "urgency" ], [ "Newest first", "newest" ], [ "Oldest first", "oldest" ] ] %>
 
 <div class="w-full">
   <% if notice.present? %>
@@ -21,28 +21,56 @@
     <% end %>
   </dl>
 
-  <%= form_with url: root_path, method: :get, id: "filters", class: "flex flex-wrap items-end gap-3 mt-8" do %>
-    <div>
-      <%= label_tag :status, "Status", class: "block text-sm text-gray-400 mb-1" %>
-      <%= select_tag :status,
-            options_for_select([ [ "All statuses", "" ] ] + Request.statuses.keys.map { |s| [ s.humanize, s ] }, params[:status]),
-            class: "rounded-md border border-gray-600 bg-gray-900 px-3 py-2" %>
+  <% current = { status: params[:status].presence, urgency: params[:urgency].presence, sort: params[:sort].presence }.compact %>
+  <% chips = [
+       [ :status, "Status", params[:status].presence&.humanize ],
+       [ :urgency, "Urgency", params[:urgency].presence&.humanize ],
+       [ :sort, "Sort", sort_options.to_h { |label, value| [ value, label ] }[params[:sort].presence] ]
+     ].select { |_, _, value| value.present? } %>
+
+  <div data-controller="dialog" class="flex flex-wrap items-center gap-3 mt-8">
+    <button type="button" data-action="dialog#open" class="rounded-md px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 font-medium cursor-pointer">Filters</button>
+
+    <div id="active_filters" class="flex flex-wrap items-center gap-2">
+      <% chips.each do |key, label, value| %>
+        <span data-chip="<%= key %>" class="inline-flex items-center gap-1.5 rounded-full border border-gray-700 bg-gray-900 pl-3 pr-1.5 py-1 text-sm">
+          <%= label %>: <%= value %>
+          <%= link_to "×", root_path(**current.except(key)), "aria-label": "Remove #{label.downcase} filter", class: "rounded-full px-1.5 text-gray-400 hover:bg-gray-700 hover:text-gray-100" %>
+        </span>
+      <% end %>
     </div>
-    <div>
-      <%= label_tag :urgency, "Urgency", class: "block text-sm text-gray-400 mb-1" %>
-      <%= select_tag :urgency,
-            options_for_select([ [ "All urgencies", "" ] ] + Request.urgencies.keys.map { |u| [ u.humanize, u ] }, params[:urgency]),
-            class: "rounded-md border border-gray-600 bg-gray-900 px-3 py-2" %>
-    </div>
-    <div>
-      <%= label_tag :sort, "Sort", class: "block text-sm text-gray-400 mb-1" %>
-      <%= select_tag :sort, options_for_select(sort_options, params[:sort]), class: "rounded-md border border-gray-600 bg-gray-900 px-3 py-2" %>
-    </div>
-    <%= submit_tag "Apply", name: nil, class: "rounded-md px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 font-medium cursor-pointer" %>
+
     <% if filtering %>
       <%= link_to "Clear", root_path, class: "px-2 py-2.5 text-blue-400 hover:underline" %>
     <% end %>
-  <% end %>
+
+    <dialog data-dialog-target="dialog" data-action="click->dialog#closeOnBackdrop keydown.esc->dialog#close" class="m-auto w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 text-gray-100 backdrop:bg-black/60">
+      <h2 class="font-bold text-2xl mb-4">Filter and sort</h2>
+
+      <%= form_with url: root_path, method: :get, id: "filters", class: "space-y-4" do %>
+        <div>
+          <%= label_tag :status, "Status", class: "block text-sm text-gray-400 mb-1" %>
+          <%= select_tag :status,
+                options_for_select([ [ "All statuses", "" ] ] + Request.statuses.keys.map { |s| [ s.humanize, s ] }, params[:status]),
+                class: "w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-2" %>
+        </div>
+        <div>
+          <%= label_tag :urgency, "Urgency", class: "block text-sm text-gray-400 mb-1" %>
+          <%= select_tag :urgency,
+                options_for_select([ [ "All urgencies", "" ] ] + Request.urgencies.keys.map { |u| [ u.humanize, u ] }, params[:urgency]),
+                class: "w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-2" %>
+        </div>
+        <div>
+          <%= label_tag :sort, "Sort", class: "block text-sm text-gray-400 mb-1" %>
+          <%= select_tag :sort, options_for_select(sort_options, params[:sort]), class: "w-full rounded-md border border-gray-600 bg-gray-900 px-3 py-2" %>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" data-action="dialog#close" class="rounded-md px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 font-medium cursor-pointer">Cancel</button>
+          <%= submit_tag "Apply", name: nil, class: "rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium cursor-pointer" %>
+        </div>
+      <% end %>
+    </dialog>
+  </div>
 
   <% if @requests.any? %>
     <table id="requests" class="min-w-full mt-8 text-left">

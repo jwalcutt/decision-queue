@@ -124,6 +124,25 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#status_counts dd", text: "0", count: 4
   end
 
+  test "the toolbar has a Filters button and the dialog holds the form" do
+    get root_url
+
+    assert_select "button", "Filters"
+    assert_select "dialog form#filters select", 3
+    assert_select "#active_filters [data-chip]", 0
+  end
+
+  test "active filters render as chips that can be removed one at a time" do
+    get root_url, params: { status: "deferred", sort: "newest" }
+
+    assert_select "#active_filters [data-chip]", 2
+    assert_select "#active_filters [data-chip='status']", /Status: Deferred/
+    assert_select "#active_filters [data-chip='status'] a[href=?]", root_path(sort: "newest")
+    assert_select "#active_filters [data-chip='sort']", /Sort: Newest first/
+    assert_select "#active_filters [data-chip='sort'] a[href=?]", root_path(status: "deferred")
+    assert_select "#active_filters [data-chip='urgency']", 0
+  end
+
   test "queue shows a count for every status" do
     queued(urgency: "medium", status: "deferred", created_at: 1.day.ago)
     queued(urgency: "medium", status: "accepted", created_at: 1.day.ago)
