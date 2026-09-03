@@ -1,5 +1,7 @@
 <% content_for :title, @request.title %>
 
+<% back_to_queue = link_to "Back to queue", root_path, data: { controller: "escape-link", action: "keydown.esc@window->escape-link#follow" }, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 inline-block font-medium" %>
+
 <div class="md:w-2/3 w-full">
   <% if notice.present? %>
     <p class="py-2 px-3 bg-green-950 mb-5 text-green-300 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
@@ -13,16 +15,15 @@
     <span class="text-gray-400">Submitted <time datetime="<%= @request.created_at.iso8601 %>"><%= @request.created_at.to_fs(:long) %></time></span>
   </p>
 
-  <div class="my-6 space-y-5">
-    <div>
-      <strong class="block font-medium mb-1">Problem statement</strong>
-      <p><%= @request.problem_statement %></p>
-    </div>
-    <div>
-      <strong class="block font-medium mb-1">Expected impact</strong>
-      <p><%= @request.expected_impact %></p>
-    </div>
-  </div>
+  <section class="my-8">
+    <h2 class="font-bold text-2xl mb-3">Problem statement</h2>
+    <p><%= @request.problem_statement %></p>
+  </section>
+
+  <section class="my-8">
+    <h2 class="font-bold text-2xl mb-3">Expected impact</h2>
+    <p><%= @request.expected_impact %></p>
+  </section>
 
   <section id="decision_history" class="my-8">
     <h2 class="font-bold text-2xl mb-3">Decision history</h2>
@@ -76,20 +77,22 @@
         <%= form.textarea :reason, rows: 3, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": @decision.errors[:reason].none?, "border-red-500 focus:outline-red-500": @decision.errors[:reason].any?}] %>
       </div>
 
-      <div class="inline">
+      <div class="flex flex-wrap gap-3 my-5">
         <%= form.submit "Record decision", class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+        <%= back_to_queue %>
       </div>
     <% end %>
   </section>
-  <% elsif @decision.errors.any? %>
-    <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md my-8">
-      <ul class="list-disc ml-6">
-        <% @decision.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
-    </div>
+  <% else %>
+    <% if @decision.errors.any? %>
+      <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md my-8">
+        <ul class="list-disc ml-6">
+          <% @decision.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+    <%= back_to_queue %>
   <% end %>
-
-  <%= link_to "Back to queue", root_path, data: { controller: "escape-link", action: "keydown.esc@window->escape-link#follow" }, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 inline-block font-medium" %>
 </div>
