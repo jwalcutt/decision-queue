@@ -177,6 +177,26 @@ class RequestTest < ActiveSupport::TestCase
     assert_equal Request.queue_order.pluck(:id), Request.sorted_by("bogus").pluck(:id)
   end
 
+  test "content can be edited while pending and is frozen once decided" do
+    pending = requests(:one)
+    assert pending.update(title: "Bulk export for Northwind Outfitters, revised")
+
+    deferred = requests(:three)
+    assert_not deferred.update(title: "Changed after the fact")
+    assert_includes deferred.errors[:base].join, "can no longer be edited"
+    assert_equal "Printable member badges for Lantern Cooperative", deferred.reload.title
+
+    assert deferred.decide(decision_type: "accepted", reason: "Status changes still go through.").persisted?
+  end
+
+  test "a request can be deleted while pending and not once decided" do
+    assert_difference("Request.count", -1) { requests(:one).destroy }
+
+    deferred = requests(:three)
+    assert_no_difference("Request.count") { assert_not deferred.destroy }
+    assert_includes deferred.errors[:base].join, "can no longer be deleted"
+  end
+
   test "status outside the known states is a validation error, not an exception" do
     request = requests(:one).dup
     assert_nothing_raised { request.status = "approved" }

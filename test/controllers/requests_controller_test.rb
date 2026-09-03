@@ -166,6 +166,70 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#active_filters [data-chip='urgency']", 0
   end
 
+  test "edit page renders the form for a pending request" do
+    get edit_request_url(@sample_request)
+
+    assert_response :success
+    assert_select "input[name='request[title]'][value=?]", @sample_request.title
+  end
+
+  test "valid update changes the request and returns to its page" do
+    patch request_url(@sample_request), params: { request: { title: "Bulk export, revised" } }
+
+    assert_redirected_to request_url(@sample_request)
+    follow_redirect!
+    assert_select "h1", "Bulk export, revised"
+    assert_select "#notice", /updated/
+  end
+
+  test "invalid update re-renders the form and changes nothing" do
+    patch request_url(@sample_request), params: { request: { title: "" } }
+
+    assert_response :unprocessable_content
+    assert_includes response.body, "Title can&#39;t be blank"
+    assert_equal "Bulk export for Northwind Outfitters", @sample_request.reload.title
+  end
+
+  test "update cannot change status" do
+    patch request_url(@sample_request), params: { request: { title: "Still pending", status: "accepted" } }
+
+    assert_equal "pending", @sample_request.reload.status
+  end
+
+  test "edit, update, and delete are refused once a request has been decided" do
+    deferred = requests(:three)
+
+    get edit_request_url(deferred)
+    assert_redirected_to request_url(deferred)
+
+    patch request_url(deferred), params: { request: { title: "Changed" } }
+    assert_redirected_to request_url(deferred)
+    follow_redirect!
+    assert_select "#alert", /Only pending requests/
+    assert_equal "Printable member badges for Lantern Cooperative", deferred.reload.title
+
+    assert_no_difference("Request.count") { delete request_url(deferred) }
+    assert_redirected_to request_url(deferred)
+  end
+
+  test "a pending request can be deleted" do
+    assert_difference("Request.count", -1) { delete request_url(@sample_request) }
+
+    assert_redirected_to root_url
+    follow_redirect!
+    assert_select "#notice", /deleted/
+  end
+
+  test "edit and delete controls appear only for pending requests" do
+    get request_url(@sample_request)
+    assert_select "a[href=?]", edit_request_path(@sample_request), "Edit"
+    assert_select "form[action=?] button", request_path(@sample_request), "Delete"
+
+    get request_url(requests(:three))
+    assert_select "a[href=?]", edit_request_path(requests(:three)), 0
+    assert_select "form[action=?] button", request_path(requests(:three)), 0
+  end
+
   test "queue shows a count for every status" do
     queued(urgency: "medium", status: "deferred", created_at: 1.day.ago)
     queued(urgency: "medium", status: "accepted", created_at: 1.day.ago)

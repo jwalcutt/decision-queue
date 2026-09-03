@@ -7,6 +7,7 @@ class Request < ApplicationRecord
   # sort select speak the same vocabulary. Anything else means queue order.
   # Urgency "ascending" is high first: the header toggle's first click should
   # land on the order people almost always want.
+  CONTENT_ATTRIBUTES = %w[title problem_statement expected_impact urgency].freeze
   SORTS = {
     "urgency_asc" => :urgency_high_first,
     "urgency_desc" => :urgency_low_first,
@@ -21,6 +22,8 @@ class Request < ApplicationRecord
     default: :pending, validate: true
 
   validates :title, :problem_statement, :expected_impact, :urgency, presence: true
+  validate :content_frozen_once_decided, on: :update
+  before_destroy :only_while_pending
 
   # Counts for every status in queue order, zeros included, from one GROUP BY.
   def self.status_counts
@@ -53,6 +56,11 @@ class Request < ApplicationRecord
     pending? || deferred?
   end
 
+  # Editing and deleting are allowed only before any decision is recorded.
+  def editable?
+    pending?
+  end
+
   # Records a decision and moves the request to that state, or does neither.
   # Always returns the decision; an unsaved one carries the validation errors.
   # The row lock means two simultaneous decisions can't both pass the guard.
@@ -63,4 +71,18 @@ class Request < ApplicationRecord
     end
     decision
   end
+
+  private
+    def content_frozen_once_decided
+      return if pending? || (changed & CONTENT_ATTRIBUTES).empty?
+
+      errors.add(:base, "This request has been decided and can no longer be edited.")
+    end
+
+    def only_while_pending
+      return if pending?
+
+      errors.add(:base, "This request has been decided and can no longer be deleted.")
+      throw :abort
+    end
 end
