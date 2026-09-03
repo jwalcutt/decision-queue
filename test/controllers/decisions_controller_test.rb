@@ -94,7 +94,6 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
     )
     get request_url(accepted)
     assert_select "form[action=?]", request_decisions_path(accepted), 0
-    assert_includes response.body, "decisions are final"
   end
 
   test "the request page shows its decision history" do

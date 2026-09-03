@@ -49,8 +49,8 @@
     <% end %>
   </section>
 
+  <% if @request.decidable? %>
   <section id="decision_form" class="my-8">
-    <% if @request.decidable? %>
     <h2 class="font-bold text-2xl mb-3">Record a decision</h2>
 
     <%= form_with(model: [ @request, @decision ], class: "contents") do |form| %>
@@ -86,10 +86,16 @@
         <%= form.submit "Record decision", class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
       </div>
     <% end %>
-    <% else %>
-    <p class="text-gray-500">This request is <%= @request.status %>. Accepted and declined decisions are final.</p>
-    <% end %>
   </section>
+  <% elsif @decision.errors.any? %>
+    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md my-8">
+      <ul class="list-disc ml-6">
+        <% @decision.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 
   <%= link_to "Back to queue", root_path, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
 </div>
