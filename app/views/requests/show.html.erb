@@ -45,44 +45,49 @@
   </section>
 
   <% if @request.decidable? %>
-  <section id="decision_form" class="my-8">
-    <h2 class="font-bold text-2xl mb-3">Record a decision</h2>
+  <div id="decision_form" data-controller="dialog" data-dialog-open-value="<%= @decision.errors.any? %>" class="flex flex-wrap gap-3 my-8">
+    <button type="button" data-action="dialog#open" class="w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium cursor-pointer">Record a decision</button>
+    <%= back_to_queue %>
 
-    <%= form_with(model: [ @request, @decision ], class: "contents") do |form| %>
-      <% if @decision.errors.any? %>
-        <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md mt-3">
-          <h3>This decision couldn't be saved:</h3>
-          <ul class="list-disc ml-6">
-            <% @decision.errors.each do |error| %>
-              <li><%= error.full_message %></li>
+    <dialog data-dialog-target="dialog" data-action="click->dialog#closeOnBackdrop keydown.esc->dialog#close" class="m-auto w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 text-gray-100 backdrop:bg-black/60">
+      <h2 class="font-bold text-2xl mb-4">Record a decision</h2>
+
+      <%= form_with(model: [ @request, @decision ], class: "space-y-4") do |form| %>
+        <% if @decision.errors.any? %>
+          <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md">
+            <h3>This decision couldn't be saved:</h3>
+            <ul class="list-disc ml-6">
+              <% @decision.errors.each do |error| %>
+                <li><%= error.full_message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <fieldset>
+          <legend class="block text-sm text-gray-400 mb-2">Decision</legend>
+          <div class="flex gap-6">
+            <% { "accepted" => "Accept", "deferred" => "Defer", "declined" => "Decline" }.each do |value, label| %>
+              <label class="flex items-center gap-2">
+                <%= form.radio_button :decision_type, value %>
+                <%= label %>
+              </label>
             <% end %>
-          </ul>
+          </div>
+        </fieldset>
+
+        <div>
+          <%= form.label :reason, class: "block text-sm text-gray-400 mb-1" %>
+          <%= form.textarea :reason, rows: 3, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 w-full", {"border-gray-600 focus:outline-blue-500": @decision.errors[:reason].none?, "border-red-500 focus:outline-red-500": @decision.errors[:reason].any?}] %>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" data-action="dialog#close" class="rounded-md px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 font-medium cursor-pointer">Cancel</button>
+          <%= form.submit "Record decision", class: "rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium cursor-pointer" %>
         </div>
       <% end %>
-
-      <fieldset class="my-5">
-        <legend class="mb-2">Decision</legend>
-        <div class="flex gap-6">
-          <% { "accepted" => "Accept", "deferred" => "Defer", "declined" => "Decline" }.each do |value, label| %>
-            <label class="flex items-center gap-2">
-              <%= form.radio_button :decision_type, value %>
-              <%= label %>
-            </label>
-          <% end %>
-        </div>
-      </fieldset>
-
-      <div class="my-5">
-        <%= form.label :reason %>
-        <%= form.textarea :reason, rows: 3, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": @decision.errors[:reason].none?, "border-red-500 focus:outline-red-500": @decision.errors[:reason].any?}] %>
-      </div>
-
-      <div class="flex flex-wrap gap-3 my-5">
-        <%= form.submit "Record decision", class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
-        <%= back_to_queue %>
-      </div>
-    <% end %>
-  </section>
+    </dialog>
+  </div>
   <% else %>
     <% if @decision.errors.any? %>
       <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md my-8">

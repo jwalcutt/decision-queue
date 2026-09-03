@@ -42,6 +42,7 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_includes response.body, "Reason can&#39;t be blank"
+    assert_select "#decision_form[data-dialog-open-value=true]", 1
     assert_equal "pending", request.reload.status
   end
 
@@ -91,7 +92,9 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
 
   test "the decision form is shown for deferred requests and hidden for final ones" do
     get request_url(requests(:three))
-    assert_select "form[action=?]", request_decisions_path(requests(:three))
+    assert_select "#decision_form button", text: "Record a decision"
+    assert_select "#decision_form[data-dialog-open-value=false]", 1
+    assert_select "#decision_form dialog form[action=?]", request_decisions_path(requests(:three))
 
     accepted = Request.create!(
       title: "Already accepted", problem_statement: "x", expected_impact: "y",
