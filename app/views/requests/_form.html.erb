@@ -1,4 +1,4 @@
-<%= form_with(model: request, class: "contents") do |form| %>
+<%= form_with(model: request, data: { controller: "enter-submit", action: "keydown->enter-submit#submit" }, class: "contents") do |form| %>
   <% if request.errors.any? %>
     <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md mt-3">
       <h2>This request couldn't be saved:</h2>

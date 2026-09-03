@@ -16,7 +16,7 @@
 
 <div class="w-full">
   <% if notice.present? %>
-    <p class="py-2 px-3 bg-green-950 mb-5 text-green-300 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
+    <p class="py-2 px-3 bg-green-950 mb-5 text-green-300 font-medium rounded-md inline-block" id="notice" data-controller="flash"><%= notice %></p>
   <% end %>
 
   <div class="flex justify-between items-center">
@@ -59,7 +59,7 @@
     <dialog data-dialog-target="dialog" data-action="click->dialog#closeOnBackdrop keydown.esc->dialog#close" class="m-auto w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 text-gray-100 backdrop:bg-black/60">
       <h2 class="font-bold text-2xl mb-4">Filter and sort</h2>
 
-      <%= form_with url: root_path, method: :get, id: "filters", class: "space-y-4" do %>
+      <%= form_with url: root_path, method: :get, id: "filters", data: { controller: "enter-submit", action: "keydown->enter-submit#submit" }, class: "space-y-4" do %>
         <% queue_query.slice(:per_page).each { |key, value| concat hidden_field_tag(key, value) } %>
         <div>
           <%= label_tag :status, "Status", class: "block text-sm text-gray-400 mb-1" %>

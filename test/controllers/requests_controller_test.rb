@@ -24,6 +24,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
 
   test "new form offers the three urgencies as a select" do
     get new_request_url
+    assert_select "form[action=?][data-controller='enter-submit']", requests_path
     assert_response :success
     assert_select "select[name='request[urgency]'] option", 4
     assert_select "input[name='request[organization]']"
@@ -62,7 +63,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
   test "filter form and count links point at the queue" do
     get root_url
 
-    assert_select "form#filters[action=?][method='get']", root_path
+    assert_select "form#filters[action=?][method='get'][data-controller='enter-submit']", root_path
     assert_select "form#filters select[name='status'] option", 5
     assert_select "form#filters select[name='urgency'] option", 4
     assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(status: "deferred")
@@ -226,7 +227,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_url
     follow_redirect!
-    assert_select "#notice", /deleted/
+    assert_select "#notice[data-controller='flash']", /deleted/
   end
 
   test "edit and delete controls appear only for pending requests" do
