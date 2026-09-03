@@ -9,6 +9,7 @@ class RequestsController < ApplicationController
 
   # GET /requests/1
   def show
+    @decision = Decision.new
   end
 
   # GET /requests/new

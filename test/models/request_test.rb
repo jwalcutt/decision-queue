@@ -45,6 +45,7 @@ class RequestTest < ActiveSupport::TestCase
       pending_medium,      # pending, medium
       requests(:two),      # pending, low
       deferred_medium,
+      requests(:three),    # deferred, low
       accepted_high,
       declined_high
     ]
@@ -53,13 +54,36 @@ class RequestTest < ActiveSupport::TestCase
   end
 
   test "status counts cover every status in queue order with zeros filled in" do
-    assert_equal({ "pending" => 2, "deferred" => 0, "accepted" => 0, "declined" => 0 }, Request.status_counts)
+    assert_equal({ "pending" => 2, "deferred" => 1, "accepted" => 0, "declined" => 0 }, Request.status_counts)
     assert_equal Request::STATUS_ORDER, Request.status_counts.keys
 
     queued(urgency: "low", status: "accepted", created_at: 1.day.ago)
     queued(urgency: "low", status: "declined", created_at: 1.day.ago)
 
-    assert_equal({ "pending" => 2, "deferred" => 0, "accepted" => 1, "declined" => 1 }, Request.status_counts)
+    assert_equal({ "pending" => 2, "deferred" => 1, "accepted" => 1, "declined" => 1 }, Request.status_counts)
+  end
+
+  test "decide records the decision and moves the request to that state" do
+    request = requests(:one)
+
+    decision = request.decide(decision_type: "declined", reason: "Out of scope for this quarter.")
+
+    assert decision.persisted?
+    assert_equal "declined", request.reload.status
+    assert_equal [ decision ], request.decisions.to_a
+  end
+
+  test "decide with a blank reason saves nothing and leaves the status alone" do
+    request = requests(:one)
+
+    decision = nil
+    assert_no_difference("Decision.count") do
+      decision = request.decide(decision_type: "accepted", reason: "")
+    end
+
+    assert_not decision.persisted?
+    assert decision.errors.of_kind?(:reason, :blank)
+    assert_equal "pending", request.reload.status
   end
 
   test "status outside the known states is a validation error, not an exception" do

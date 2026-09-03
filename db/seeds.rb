@@ -1,7 +1,7 @@
 # Ten sample partner requests so the queue has something to show on first boot.
 # Idempotent on title, so `bin/rails db:seed` can run again without duplicating rows.
-# Statuses are assigned directly here; matching decision records are seeded
-# alongside once the decisions table exists.
+# Requests with a non-pending status also get the decision that put them there,
+# so the history on the request page matches the status in the queue.
 
 requests = [
   {
@@ -38,36 +38,45 @@ requests = [
     title: "Member directory search for Lantern Cooperative",
     problem_statement: "Members can only browse the directory alphabetically; finding someone by skill means scrolling.",
     expected_impact: "Useful once the directory passes a few hundred members, which it hasn't yet.",
-    urgency: "medium", status: "deferred", created_at: 11.days.ago
+    urgency: "medium", status: "deferred", created_at: 11.days.ago,
+    reason: "Worth doing once the directory is big enough to need it; check back next quarter."
   },
   {
     title: "Printable statements for Oakridge Credit Union",
     problem_statement: "A handful of members ask for paper statements and staff format them by hand.",
     expected_impact: "Saves a few minutes per request; volume is low.",
-    urgency: "low", status: "deferred", created_at: 8.days.ago
+    urgency: "low", status: "deferred", created_at: 8.days.ago,
+    reason: "Too few requests to justify the work right now; revisit if volume grows."
   },
   {
     title: "Two-factor login for Marigold Studio",
     problem_statement: "A shared password leaked and they had to rotate credentials for every staff member.",
     expected_impact: "Closes the gap their insurer flagged and unblocks their renewal.",
-    urgency: "high", status: "accepted", created_at: 13.days.ago
+    urgency: "high", status: "accepted", created_at: 13.days.ago,
+    reason: "Security gap with a renewal deadline behind it; scheduled for the next sprint."
   },
   {
     title: "Pallet-level tracking for Pinewood Logistics",
     problem_statement: "Shipments are tracked per truck, so a single misplaced pallet means checking every stop.",
     expected_impact: "Locates a missing pallet in minutes rather than a day of phone calls.",
-    urgency: "medium", status: "accepted", created_at: 10.days.ago
+    urgency: "medium", status: "accepted", created_at: 10.days.ago,
+    reason: "Clear time saving and the tracking data already exists on our side."
   },
   {
     title: "Guest loyalty points for Driftwood Hospitality",
     problem_statement: "They want a points scheme across their three properties.",
     expected_impact: "Unclear; they have no numbers on repeat stays yet.",
-    urgency: "low", status: "declined", created_at: 7.days.ago
+    urgency: "low", status: "declined", created_at: 7.days.ago,
+    reason: "No evidence yet that repeat stays are a problem; happy to look again with numbers."
   }
 ]
 
 requests.each do |attrs|
-  Request.find_or_create_by!(title: attrs[:title]) { |request| request.assign_attributes(attrs) }
+  reason = attrs[:reason]
+  request = Request.find_or_create_by!(title: attrs[:title]) { |r| r.assign_attributes(attrs.except(:reason)) }
+  next if reason.nil?
+
+  request.decisions.find_or_create_by!(decision_type: request.status) { |decision| decision.reason = reason }
 end
 
-puts "Seeded #{Request.count} requests"
+puts "Seeded #{Request.count} requests and #{Decision.count} decisions"

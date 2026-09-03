@@ -1,6 +1,6 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-deferred_two:
-  request: two
+deferred_three:
+  request: three
   decision_type: deferred
   reason: Nice to have, but nobody is blocked; revisit after the dashboard rework.

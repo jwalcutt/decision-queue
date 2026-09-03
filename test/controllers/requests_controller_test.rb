@@ -18,7 +18,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
 
     get root_url
 
-    expected = [ requests(:one), pending_high_newer, pending_medium, requests(:two), accepted_high ]
+    expected = [ requests(:one), pending_high_newer, pending_medium, requests(:two), requests(:three), accepted_high ]
     assert_equal expected.map { |r| dom_id(r) }, css_select("tbody tr").map { |tr| tr["id"] }
   end
 
@@ -37,7 +37,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     get root_url
 
     assert_select "#status_counts [data-status='pending'] dd", "2"
-    assert_select "#status_counts [data-status='deferred'] dd", "1"
+    assert_select "#status_counts [data-status='deferred'] dd", "2"
     assert_select "#status_counts [data-status='accepted'] dd", "1"
     assert_select "#status_counts [data-status='declined'] dd", "2"
   end

@@ -11,3 +11,10 @@ two:
   problem_statement: Night-shift staff find the current theme hard on the eyes.
   expected_impact: Small quality-of-life win for one partner; no revenue attached.
   urgency: low
+
+three:
+  title: Printable member badges for Lantern Cooperative
+  problem_statement: Volunteers hand-letter badges for the annual meeting.
+  expected_impact: A small time saver once a year.
+  urgency: low
+  status: deferred
