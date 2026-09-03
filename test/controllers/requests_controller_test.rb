@@ -152,7 +152,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     get root_url
 
     assert_select "button", "Filters"
-    assert_select "dialog form#filters select", 3
+    assert_select "dialog form#filters select", 4
     assert_select "#active_filters [data-chip]", 0
   end
 
@@ -312,6 +312,38 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(per_page: 5, status: "deferred")
     assert_select "form#per_page input[type='hidden'][name='status'][value='pending']"
     assert_select "form#filters input[type='hidden'][name='per_page'][value='5']"
+  end
+
+  test "organization filter narrows the rows, marks the select, and shows a chip" do
+    get root_url, params: { organization: "Harborlight" }
+
+    assert_equal [ dom_id(requests(:two)) ], css_select("tbody tr").map { |tr| tr["id"] }
+    assert_select "select[name='organization'] option[selected][value='Harborlight']"
+    assert_select "#active_filters [data-chip='organization']", /Organization: Harborlight/
+    assert_select "#active_filters [data-chip='organization'] a[href=?]", root_path
+  end
+
+  test "an unknown organization shows the filtered empty state" do
+    get root_url, params: { organization: "Nobody" }
+
+    assert_select "tbody tr", 0
+    assert_select "#empty_state", /No requests match these filters/
+  end
+
+  test "the organization select lists every organization in the queue" do
+    get root_url
+
+    assert_equal [ "All organizations", "Harborlight", "Lantern Cooperative", "Northwind Outfitters" ],
+      css_select("select[name='organization'] option").map(&:text)
+  end
+
+  test "organization travels with the other queue links" do
+    fill_two_pages
+
+    get root_url, params: { organization: "Harborlight", status: "pending" }
+
+    assert_select "#pagination", 0
+    assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(organization: "Harborlight", status: "deferred")
   end
 
   test "queue shows a count for every status" do

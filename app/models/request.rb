@@ -34,6 +34,9 @@ class Request < ApplicationRecord
   # Unknown or blank values mean "no filter", so a typo in the URL shows everything.
   scope :with_status, ->(status) { where(status: status) if statuses.key?(status) }
   scope :with_urgency, ->(urgency) { where(urgency: urgency) if urgencies.key?(urgency) }
+  # Organization is free text, so any non-blank value filters; a name that
+  # matches nothing shows the empty state rather than being ignored.
+  scope :with_organization, ->(organization) { where(organization: organization) if organization.present? }
 
   # Queue order: still-actionable statuses first, then urgency, then oldest first.
   scope :queue_order, -> {

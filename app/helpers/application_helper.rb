@@ -57,6 +57,7 @@ module ApplicationHelper
     {
       status: params[:status].presence,
       urgency: params[:urgency].presence,
+      organization: params[:organization].presence,
       sort: params[:sort].presence,
       per_page: per_page
     }.merge(overrides).compact

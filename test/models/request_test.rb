@@ -197,6 +197,12 @@ class RequestTest < ActiveSupport::TestCase
     assert_includes deferred.errors[:base].join, "can no longer be deleted"
   end
 
+  test "with_organization filters by exact name, ignores blank, and matches nothing for an unknown name" do
+    assert_equal [ requests(:two) ], Request.with_organization("Harborlight").to_a
+    assert_equal Request.count, Request.with_organization("").count
+    assert_equal 0, Request.with_organization("Nobody").count
+  end
+
   test "status outside the known states is a validation error, not an exception" do
     request = requests(:one).dup
     assert_nothing_raised { request.status = "approved" }

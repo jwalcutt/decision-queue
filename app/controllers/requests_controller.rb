@@ -7,7 +7,9 @@ class RequestsController < ApplicationController
 
   # GET /requests
   def index
-    scope = Request.with_status(params[:status]).with_urgency(params[:urgency]).sorted_by(params[:sort])
+    scope = Request.with_status(params[:status]).with_urgency(params[:urgency])
+      .with_organization(params[:organization]).sorted_by(params[:sort])
+    @organizations = Request.distinct.order(:organization).pluck(:organization)
     @per_page = per_page
     @page_count = [ (scope.count.to_f / @per_page).ceil, 1 ].max
     @page = params[:page].to_i.clamp(1, @page_count)
