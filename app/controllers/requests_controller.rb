@@ -20,7 +20,7 @@ class RequestsController < ApplicationController
     @request = Request.new(request_params)
 
     if @request.save
-      redirect_to @request, notice: "Request was successfully created."
+      redirect_to requests_path, notice: "Request was successfully created."
     else
       render :new, status: :unprocessable_content
     end

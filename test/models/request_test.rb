@@ -18,7 +18,7 @@ class RequestTest < ActiveSupport::TestCase
     request = requests(:one).dup
     request.urgency = nil
     assert_not request.valid?
-    assert request.errors[:urgency].any?
+    assert request.errors.of_kind?(:urgency, :blank)
   end
 
   test "urgency outside low, medium, high is a validation error, not an exception" do
