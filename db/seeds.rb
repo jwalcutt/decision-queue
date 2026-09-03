@@ -1,7 +1,8 @@
 # Ten sample partner requests so the queue has something to show on first boot.
 # Idempotent on title, so `bin/rails db:seed` can run again without duplicating rows.
-# Requests with a non-pending status also get the decision that put them there,
-# so the history on the request page matches the status in the queue.
+# Every request is created pending; the ones listed with a status and reason
+# are then decided through Request#decide, so the seeded history and status
+# agree and the terminal-state guard applies to seeds as well.
 
 requests = [
   {
@@ -72,11 +73,11 @@ requests = [
 ]
 
 requests.each do |attrs|
-  reason = attrs[:reason]
-  request = Request.find_or_create_by!(title: attrs[:title]) { |r| r.assign_attributes(attrs.except(:reason)) }
-  next if reason.nil?
+  request = Request.find_or_create_by!(title: attrs[:title]) { |r| r.assign_attributes(attrs.except(:status, :reason)) }
+  next unless request.previously_new_record? && attrs[:reason]
 
-  request.decisions.find_or_create_by!(decision_type: request.status) { |decision| decision.reason = reason }
+  decision = request.decide(decision_type: attrs[:status], reason: attrs[:reason])
+  raise ActiveRecord::RecordInvalid, decision unless decision.persisted?
 end
 
 puts "Seeded #{Request.count} requests and #{Decision.count} decisions"

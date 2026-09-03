@@ -141,9 +141,18 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "pending", Request.last.status
   end
 
-  test "should show request" do
+  test "the request page renders its details" do
     get request_url(@sample_request)
+
     assert_response :success
+    assert_select "h1", @sample_request.title
+    assert_select "#status", "Pending"
+  end
+
+  test "an unknown request returns not found" do
+    get request_url(id: 0)
+
+    assert_response :not_found
   end
 
   private
