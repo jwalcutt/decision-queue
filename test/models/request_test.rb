@@ -32,10 +32,42 @@ class RequestTest < ActiveSupport::TestCase
     assert_equal "pending", Request.new.status
   end
 
+  test "queue order is status, then urgency, then oldest first" do
+    pending_high_newer = queued(urgency: "high", status: "pending", created_at: 1.day.from_now)
+    pending_medium = queued(urgency: "medium", status: "pending", created_at: 1.day.ago)
+    deferred_medium = queued(urgency: "medium", status: "deferred", created_at: 2.days.ago)
+    accepted_high = queued(urgency: "high", status: "accepted", created_at: 3.days.ago)
+    declined_high = queued(urgency: "high", status: "declined", created_at: 4.days.ago)
+
+    expected = [
+      requests(:one),      # pending, high, fixture timestamp
+      pending_high_newer,  # pending, high, newer
+      pending_medium,      # pending, medium
+      requests(:two),      # pending, low
+      deferred_medium,
+      accepted_high,
+      declined_high
+    ]
+
+    assert_equal expected.map(&:id), Request.queue_order.pluck(:id)
+  end
+
   test "status outside the known states is a validation error, not an exception" do
     request = requests(:one).dup
     assert_nothing_raised { request.status = "approved" }
     assert_not request.valid?
     assert request.errors[:status].any?
   end
+
+  private
+    def queued(urgency:, status:, created_at:)
+      Request.create!(
+        title: "#{status} #{urgency} request",
+        problem_statement: "Placeholder problem for ordering tests.",
+        expected_impact: "Placeholder impact for ordering tests.",
+        urgency: urgency,
+        status: status,
+        created_at: created_at
+      )
+    end
 end

@@ -5,9 +5,21 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     @sample_request = requests(:one)
   end
 
-  test "should get index" do
-    get requests_url
+  test "root serves the queue" do
+    get root_url
     assert_response :success
+    assert_select "h1", "Decision queue"
+  end
+
+  test "queue rows render in status, urgency, and age order" do
+    accepted_high = queued(urgency: "high", status: "accepted", created_at: 1.day.ago)
+    pending_medium = queued(urgency: "medium", status: "pending", created_at: 1.day.ago)
+    pending_high_newer = queued(urgency: "high", status: "pending", created_at: 1.day.from_now)
+
+    get root_url
+
+    expected = [ requests(:one), pending_high_newer, pending_medium, requests(:two), accepted_high ]
+    assert_equal expected.map { |r| dom_id(r) }, css_select("tbody tr").map { |tr| tr["id"] }
   end
 
   test "new form offers the three urgencies as a select" do
@@ -51,6 +63,17 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    def queued(urgency:, status:, created_at:)
+      Request.create!(
+        title: "#{status} #{urgency} request",
+        problem_statement: "Placeholder problem for ordering tests.",
+        expected_impact: "Placeholder impact for ordering tests.",
+        urgency: urgency,
+        status: status,
+        created_at: created_at
+      )
+    end
+
     def valid_params
       {
         title: "Weekly usage digest for Copperline Labs",

@@ -3,7 +3,7 @@ class RequestsController < ApplicationController
 
   # GET /requests
   def index
-    @requests = Request.all
+    @requests = Request.queue_order
   end
 
   # GET /requests/1
