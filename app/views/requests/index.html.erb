@@ -49,7 +49,7 @@
     </div>
 
     <% if filtering %>
-      <%= link_to "Clear", root_path, class: "px-2 py-2.5 text-blue-400 hover:underline" %>
+      <%= link_to "Clear", root_path, data: { controller: "escape-link", action: "keydown.esc@window->escape-link#follow" }, class: "px-2 py-2.5 text-blue-400 hover:underline" %>
     <% end %>
 
     <dialog data-dialog-target="dialog" data-action="click->dialog#closeOnBackdrop keydown.esc->dialog#close" class="m-auto w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-6 text-gray-100 backdrop:bg-black/60">

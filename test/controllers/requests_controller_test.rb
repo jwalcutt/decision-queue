@@ -73,7 +73,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ requests(:two), requests(:one), requests(:three) ].map { |r| dom_id(r) },
       css_select("tbody tr").map { |tr| tr["id"] }
     assert_select "select[name='sort'] option[selected][value='submitted_desc']"
-    assert_select "a", "Clear"
+    assert_select "a[data-controller='escape-link'][href=?]", root_path, text: "Clear"
   end
 
   test "sort and filter combine" do
