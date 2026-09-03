@@ -1,93 +1,242 @@
-# Ten sample partner requests so the queue has something to show on first boot.
-# Idempotent on title, so `bin/rails db:seed` can run again without duplicating rows.
-# Every request is created pending; the ones listed with a status and reason
-# are then decided through Request#decide, so the seeded history and status
-# agree and the terminal-state guard applies to seeds as well.
+# Fictional partner requests so the queue has something to show on first boot:
+# 56 requests across eight invented organizations, enough to page through.
+# Idempotent on title, so `bin/rails db:seed` can run again without duplicating
+# rows. Every request is created pending; entries with a status and reason are
+# then decided through Request#decide, so seeded history matches status and the
+# terminal-state guard applies to seeds as well.
 
-requests = [
-  {
-    title: "Bulk order import",
-    organization: "Saltmarsh Provisions",
-    problem_statement: "Their buyers re-key weekly orders from a spreadsheet into our portal, one line at a time.",
-    expected_impact: "Cuts about six hours of data entry a week and removes the typos that cause short shipments.",
-    urgency: "high", status: "pending", created_at: 9.days.ago
-  },
-  {
-    title: "Delivery window alerts",
-    organization: "Tidewater Freight",
-    problem_statement: "Dispatchers only learn a delivery slipped when the customer calls.",
-    expected_impact: "Lets them reroute before a missed window turns into a refund.",
-    urgency: "high", status: "pending", created_at: 1.day.ago
-  },
-  {
-    title: "Appointment reminder texts",
-    organization: "Brightwater Clinics",
-    problem_statement: "Roughly one in eight patients forgets an appointment; staff phone each one by hand the day before.",
-    expected_impact: "Fewer empty slots and one less daily chore for the front desk.",
-    urgency: "medium", status: "pending", created_at: 6.days.ago
-  },
-  {
-    title: "Author royalty statements",
-    organization: "Ferngully Books",
-    problem_statement: "Quarterly statements are assembled in a spreadsheet and emailed as PDFs, which takes most of a week.",
-    expected_impact: "Statements go out on the first of the month instead of the tenth.",
-    urgency: "medium", status: "pending", created_at: 3.days.ago
-  },
-  {
-    title: "Custom report colours",
-    organization: "Kestrel Analytics",
-    problem_statement: "Their brand palette doesn't match our default chart colours, so exported reports look off-brand.",
-    expected_impact: "Nicer looking exports for one partner; no workflow change.",
-    urgency: "low", status: "pending", created_at: 12.days.ago
-  },
-  {
-    title: "Member directory search",
-    organization: "Lantern Cooperative",
-    problem_statement: "Members can only browse the directory alphabetically; finding someone by skill means scrolling.",
-    expected_impact: "Useful once the directory passes a few hundred members, which it hasn't yet.",
-    urgency: "medium", status: "deferred", created_at: 11.days.ago,
-    reason: "Worth doing once the directory is big enough to need it; check back next quarter."
-  },
-  {
-    title: "Printable statements",
-    organization: "Oakridge Credit Union",
-    problem_statement: "A handful of members ask for paper statements and staff format them by hand.",
-    expected_impact: "Saves a few minutes per request; volume is low.",
-    urgency: "low", status: "deferred", created_at: 8.days.ago,
-    reason: "Too few requests to justify the work right now; revisit if volume grows."
-  },
-  {
-    title: "Two-factor login",
-    organization: "Marigold Studio",
-    problem_statement: "A shared password leaked and they had to rotate credentials for every staff member.",
-    expected_impact: "Closes the gap their insurer flagged and unblocks their renewal.",
-    urgency: "high", status: "accepted", created_at: 13.days.ago,
-    reason: "Security gap with a renewal deadline behind it; scheduled for the next sprint."
-  },
-  {
-    title: "Pallet-level tracking",
-    organization: "Pinewood Logistics",
-    problem_statement: "Shipments are tracked per truck, so a single misplaced pallet means checking every stop.",
-    expected_impact: "Locates a missing pallet in minutes rather than a day of phone calls.",
-    urgency: "medium", status: "accepted", created_at: 10.days.ago,
-    reason: "Clear time saving and the tracking data already exists on our side."
-  },
-  {
-    title: "Guest loyalty points",
-    organization: "Driftwood Hospitality",
-    problem_statement: "They want a points scheme across their three properties.",
-    expected_impact: "Unclear; they have no numbers on repeat stays yet.",
-    urgency: "low", status: "declined", created_at: 7.days.ago,
-    reason: "No evidence yet that repeat stays are a problem; happy to look again with numbers."
-  }
-]
+requests_by_organization = {
+  "Saltmarsh Provisions" => [
+    { title: "Bulk order import", urgency: "high", created_at: 9.days.ago + 2.hours,
+      problem_statement: "Their buyers re-key weekly orders from a spreadsheet into our portal, one line at a time.",
+      expected_impact: "Cuts about six hours of data entry a week and removes the typos that cause short shipments." },
+    { title: "Cold-chain temperature alerts", urgency: "high", created_at: 4.days.ago + 5.hours,
+      problem_statement: "A refrigerated pallet spoiled last month and nobody knew until delivery.",
+      expected_impact: "Catches a failing unit hours earlier, before the stock is lost." },
+    { title: "Supplier catalogue sync", urgency: "medium", created_at: 15.days.ago + 1.hour,
+      problem_statement: "Product names and pack sizes drift from what suppliers publish.",
+      expected_impact: "Fewer mismatched deliveries and less back-and-forth with suppliers." },
+    { title: "Route sheet printing", urgency: "low", created_at: 22.days.ago + 7.hours,
+      problem_statement: "Drivers still want a paper route sheet and dispatch formats one by hand.",
+      expected_impact: "Ten minutes a morning for dispatch; drivers keep their paper." },
+    { title: "Case-break pricing", urgency: "medium", created_at: 30.days.ago + 3.hours, status: "deferred",
+      reason: "Depends on the pricing rework that is already scheduled; revisit once that ships.",
+      problem_statement: "Customers who buy part of a case get charged the full-case rate.",
+      expected_impact: "Fairer pricing for small shops and fewer credit notes." },
+    { title: "Order status page for customers", urgency: "high", created_at: 35.days.ago + 4.hours, status: "accepted",
+      reason: "Cuts the phone calls that eat their afternoons; the data is already in place.",
+      problem_statement: "Customers phone to ask where an order is, and the answer is usually in our system.",
+      expected_impact: "Fewer calls and happier customers on delivery day." },
+    { title: "Invoice PDF branding", urgency: "low", created_at: 40.days.ago + 6.hours, status: "accepted",
+      reason: "Small, contained, and their accountant asked for it twice.",
+      problem_statement: "Invoices go out with our logo instead of theirs.",
+      expected_impact: "Looks right to their customers; no workflow change." }
+  ],
 
-requests.each do |attrs|
-  request = Request.find_or_create_by!(title: attrs[:title]) { |r| r.assign_attributes(attrs.except(:status, :reason)) }
-  next unless request.previously_new_record? && attrs[:reason]
+  "Tidewater Freight" => [
+    { title: "Delivery window alerts", urgency: "high", created_at: 1.day.ago + 3.hours,
+      problem_statement: "Dispatchers only learn a delivery slipped when the customer calls.",
+      expected_impact: "Lets them reroute before a missed window turns into a refund." },
+    { title: "Driver hours tracking", urgency: "high", created_at: 6.days.ago + 8.hours,
+      problem_statement: "Hours are logged on paper and reconciled at month end, which is too late to catch overruns.",
+      expected_impact: "Keeps them inside the legal limits without a monthly scramble." },
+    { title: "Proof of delivery photos", urgency: "medium", created_at: 11.days.ago + 2.hours,
+      problem_statement: "Disputes over damaged goods come down to one person's word against another's.",
+      expected_impact: "Settles most disputes in a minute with a timestamped photo." },
+    { title: "Fuel surcharge calculator", urgency: "low", created_at: 19.days.ago + 5.hours, status: "deferred",
+      reason: "Fuel prices are flat this quarter; worth doing when they move again.",
+      problem_statement: "The surcharge is worked out by hand each week from a published index.",
+      expected_impact: "Removes a weekly chore and a source of billing arguments." },
+    { title: "Depot capacity dashboard", urgency: "medium", created_at: 26.days.ago + 1.hour, status: "accepted",
+      reason: "The numbers already exist; this is a view over them.",
+      problem_statement: "Nobody knows how full each depot is until a truck is turned away.",
+      expected_impact: "Plans loads against real space instead of guesses." },
+    { title: "Customer self-service booking", urgency: "medium", created_at: 33.days.ago + 4.hours, status: "declined",
+      reason: "Overlaps with the partner portal we are already building; we will point them at that instead.",
+      problem_statement: "Every booking goes through a phone call to the office.",
+      expected_impact: "Frees the office phone for exceptions." },
+    { title: "Pallet-level tracking", urgency: "medium", created_at: 10.days.ago + 6.hours, status: "accepted",
+      reason: "Clear time saving and the tracking data already exists on our side.",
+      problem_statement: "Shipments are tracked per truck, so a single misplaced pallet means checking every stop.",
+      expected_impact: "Locates a missing pallet in minutes rather than a day of phone calls." }
+  ],
 
-  decision = request.decide(decision_type: attrs[:status], reason: attrs[:reason])
-  raise ActiveRecord::RecordInvalid, decision unless decision.persisted?
+  "Brightwater Clinics" => [
+    { title: "Appointment reminder texts", urgency: "medium", created_at: 6.days.ago + 1.hour,
+      problem_statement: "Roughly one in eight patients forgets an appointment; staff phone each one by hand the day before.",
+      expected_impact: "Fewer empty slots and one less daily chore for the front desk." },
+    { title: "Waiting room queue display", urgency: "high", created_at: 2.days.ago + 4.hours,
+      problem_statement: "Patients ask the desk how long the wait is, and the desk doesn't know either.",
+      expected_impact: "Calmer waiting rooms and fewer interruptions at reception." },
+    { title: "Referral letter templates", urgency: "medium", created_at: 13.days.ago + 7.hours,
+      problem_statement: "Each clinician writes referral letters from scratch.",
+      expected_impact: "Saves a few minutes per referral across dozens a week." },
+    { title: "Vaccine stock counts", urgency: "high", created_at: 8.days.ago + 3.hours,
+      problem_statement: "Stock is counted by hand on Fridays, and they ran out of one vaccine mid-week twice this year.",
+      expected_impact: "Reorders before a shortage instead of after." },
+    { title: "Patient satisfaction survey", urgency: "low", created_at: 24.days.ago + 2.hours, status: "deferred",
+      reason: "Useful but not urgent; slot it after the reminder texts are live.",
+      problem_statement: "Feedback arrives as the occasional letter, so trends are invisible.",
+      expected_impact: "A monthly number the practice manager can act on." },
+    { title: "Online repeat prescriptions", urgency: "high", created_at: 29.days.ago + 5.hours, status: "accepted",
+      reason: "High volume, well understood, and their staff asked for it first.",
+      problem_statement: "Repeat prescription requests come in by phone and are transcribed by hand.",
+      expected_impact: "Fewer transcription mistakes and shorter phone queues." },
+    { title: "Staff rota swaps", urgency: "low", created_at: 37.days.ago + 8.hours, status: "declined",
+      reason: "Their rota tool already does this; we showed them where.",
+      problem_statement: "Shift swaps are arranged over group chat and lost.",
+      expected_impact: "One place to see who is working." }
+  ],
+
+  "Ferngully Books" => [
+    { title: "Author royalty statements", urgency: "medium", created_at: 3.days.ago + 6.hours,
+      problem_statement: "Quarterly statements are assembled in a spreadsheet and emailed as PDFs, which takes most of a week.",
+      expected_impact: "Statements go out on the first of the month instead of the tenth." },
+    { title: "Print run cost estimates", urgency: "high", created_at: 7.days.ago + 2.hours,
+      problem_statement: "Estimating a print run means emailing the printer and waiting a day.",
+      expected_impact: "Answers a cost question in a meeting instead of the next morning." },
+    { title: "Returns processing", urgency: "medium", created_at: 16.days.ago + 4.hours,
+      problem_statement: "Bookshop returns are logged in a notebook and reconciled monthly.",
+      expected_impact: "Credit notes go out the same week the books come back." },
+    { title: "ISBN barcode generation", urgency: "low", created_at: 21.days.ago + 1.hour, status: "deferred",
+      reason: "A free tool covers this for now; revisit if their catalogue grows.",
+      problem_statement: "Barcodes are made with a web tool and pasted into cover files by hand.",
+      expected_impact: "Removes a fiddly step from every new title." },
+    { title: "Backlist sales report", urgency: "medium", created_at: 27.days.ago + 3.hours, status: "deferred",
+      reason: "Waiting on the sales feed from their distributor before this is worth building.",
+      problem_statement: "Nobody can say which older titles still sell without pulling three spreadsheets.",
+      expected_impact: "Reprint decisions based on numbers rather than memory." },
+    { title: "Manuscript submission form", urgency: "low", created_at: 34.days.ago + 7.hours, status: "accepted",
+      reason: "Small form, and it ends the inbox triage their editor does every Monday.",
+      problem_statement: "Submissions arrive by email in every format imaginable.",
+      expected_impact: "One tidy list instead of a full inbox." },
+    { title: "Audiobook production tracker", urgency: "medium", created_at: 41.days.ago + 5.hours, status: "declined",
+      reason: "They produce two audiobooks a year; a shared document is enough.",
+      problem_statement: "Audiobook projects are tracked in email threads with the narrator.",
+      expected_impact: "Clearer view of where each production stands." }
+  ],
+
+  "Kestrel Analytics" => [
+    { title: "Custom report colours", urgency: "low", created_at: 12.days.ago + 8.hours,
+      problem_statement: "Their brand palette doesn't match our default chart colours, so exported reports look off-brand.",
+      expected_impact: "Nicer looking exports for one partner; no workflow change." },
+    { title: "Scheduled report emails", urgency: "high", created_at: 5.days.ago + 1.hour,
+      problem_statement: "An analyst exports and emails the same three reports every Monday morning.",
+      expected_impact: "Reports arrive before anyone is at their desk." },
+    { title: "Data source health checks", urgency: "high", created_at: 3.days.ago + 2.hours,
+      problem_statement: "A broken feed went unnoticed for a week and the dashboards quietly showed stale numbers.",
+      expected_impact: "A warning the same hour a feed stops." },
+    { title: "Row-level access rules", urgency: "medium", created_at: 14.days.ago + 5.hours,
+      problem_statement: "Every client user can see every client's data once they are logged in.",
+      expected_impact: "Lets them onboard clients without hand-building a separate workspace each time." },
+    { title: "Query result caching", urgency: "medium", created_at: 25.days.ago + 3.hours, status: "deferred",
+      reason: "Performance is acceptable at their current volume; check again next quarter.",
+      problem_statement: "Popular dashboards re-run the same slow query for every viewer.",
+      expected_impact: "Faster dashboards and a lighter load on the warehouse." },
+    { title: "CSV export size limit", urgency: "medium", created_at: 31.days.ago + 6.hours, status: "accepted",
+      reason: "A one-line limit that stops the timeouts they hit weekly.",
+      problem_statement: "Large exports time out and leave a half-written file.",
+      expected_impact: "Exports either finish or fail clearly." },
+    { title: "Dashboard sharing links", urgency: "low", created_at: 38.days.ago + 4.hours, status: "accepted",
+      reason: "Cheap to build and it removes a screenshot habit that leaks stale numbers.",
+      problem_statement: "Dashboards are shared as screenshots pasted into chat.",
+      expected_impact: "People see live numbers instead of last week's picture." }
+  ],
+
+  "Lantern Cooperative" => [
+    { title: "Member directory search", urgency: "medium", created_at: 23.days.ago + 2.hours,
+      problem_statement: "Members can only browse the directory alphabetically; finding someone by skill means scrolling.",
+      expected_impact: "Useful once the directory passes a few hundred members, which it hasn't yet." },
+    { title: "Meeting minutes archive", urgency: "low", created_at: 9.days.ago + 6.hours,
+      problem_statement: "Minutes live in a shared drive folder with inconsistent names.",
+      expected_impact: "Members can find last year's decision without asking the secretary." },
+    { title: "Dues payment reminders", urgency: "high", created_at: 4.days.ago + 1.hour,
+      problem_statement: "A third of members pay dues late, and chasing them is the treasurer's least favourite job.",
+      expected_impact: "Fewer late payments and a happier treasurer." },
+    { title: "Volunteer shift sign-up", urgency: "medium", created_at: 17.days.ago + 4.hours, status: "deferred",
+      reason: "Their next big event is in the spring; build it closer to then.",
+      problem_statement: "Shift sign-ups happen on a paper sheet at the front desk.",
+      expected_impact: "Members can sign up from home and see gaps." },
+    { title: "Printable member badges", urgency: "low", created_at: 28.days.ago + 7.hours, status: "deferred",
+      reason: "Nice to have, but nobody is blocked; revisit after the dashboard rework.",
+      problem_statement: "Volunteers hand-letter badges for the annual meeting.",
+      expected_impact: "A small time saver once a year." },
+    { title: "Annual report figures", urgency: "medium", created_at: 36.days.ago + 3.hours, status: "accepted",
+      reason: "The figures are in the system; a report page saves the board a weekend.",
+      problem_statement: "Board members compile the annual report numbers by hand from the membership list.",
+      expected_impact: "The report is ready a week earlier and adds up." },
+    { title: "Newsletter builder", urgency: "low", created_at: 42.days.ago + 5.hours, status: "declined",
+      reason: "Their mailing list provider already has one; we walked them through it.",
+      problem_statement: "The monthly newsletter is laid out in a word processor and pasted into email.",
+      expected_impact: "Prettier newsletters with less effort." }
+  ],
+
+  "Oakridge Credit Union" => [
+    { title: "Printable statements", urgency: "low", created_at: 8.days.ago + 5.hours,
+      problem_statement: "A handful of members ask for paper statements and staff format them by hand.",
+      expected_impact: "Saves a few minutes per request; volume is low." },
+    { title: "Loan application status", urgency: "high", created_at: 2.days.ago + 7.hours,
+      problem_statement: "Applicants call the branch daily to ask whether a decision has been made.",
+      expected_impact: "Fewer calls and applicants who feel informed." },
+    { title: "Branch opening hours page", urgency: "medium", created_at: 13.days.ago + 3.hours,
+      problem_statement: "Holiday hours are announced on a sign in the window and nowhere else.",
+      expected_impact: "Members stop turning up to a locked door." },
+    { title: "Duplicate member detection", urgency: "high", created_at: 6.days.ago + 4.hours,
+      problem_statement: "The same person sometimes ends up with two member records after a name change.",
+      expected_impact: "Cleaner records and no double mailings." },
+    { title: "Savings goal tracker", urgency: "low", created_at: 20.days.ago + 1.hour, status: "deferred",
+      reason: "A good idea for their app, which isn't scheduled until next year.",
+      problem_statement: "Members ask for a way to set a savings target and watch progress.",
+      expected_impact: "A friendlier reason to log in." },
+    { title: "Statement export for accountants", urgency: "medium", created_at: 32.days.ago + 6.hours, status: "accepted",
+      reason: "Tax season is coming and the export format is standard.",
+      problem_statement: "Business members forward PDF statements to accountants who re-type them.",
+      expected_impact: "One click instead of an afternoon of typing." },
+    { title: "Card freeze from the app", urgency: "medium", created_at: 39.days.ago + 2.hours, status: "declined",
+      reason: "Needs the card processor's API, which their contract doesn't cover yet.",
+      problem_statement: "A lost card means a phone call during office hours.",
+      expected_impact: "Members can freeze a card at midnight on a Saturday." }
+  ],
+
+  "Marigold Studio" => [
+    { title: "Client proof approvals", urgency: "high", created_at: 1.day.ago + 8.hours,
+      problem_statement: "Proofs go out as email attachments and approvals come back as a reply, if at all.",
+      expected_impact: "A clear record of who approved what and when." },
+    { title: "Project time tracking", urgency: "medium", created_at: 10.days.ago + 2.hours,
+      problem_statement: "Designers reconstruct their hours from memory at month end.",
+      expected_impact: "Accurate invoices and a real sense of which projects lose money." },
+    { title: "Asset library tagging", urgency: "low", created_at: 18.days.ago + 6.hours,
+      problem_statement: "Finding last year's logo file means asking whoever made it.",
+      expected_impact: "Less time hunting through folders." },
+    { title: "Retainer usage reports", urgency: "medium", created_at: 25.days.ago + 4.hours, status: "deferred",
+      reason: "Depends on time tracking landing first.",
+      problem_statement: "Retainer clients can't see how much of their monthly allowance they have used.",
+      expected_impact: "Fewer surprises on the invoice." },
+    { title: "Two-factor login", urgency: "high", created_at: 13.days.ago + 5.hours, status: "accepted",
+      reason: "Security gap with a renewal deadline behind it; scheduled for the next sprint.",
+      problem_statement: "A shared password leaked and they had to rotate credentials for every staff member.",
+      expected_impact: "Closes the gap their insurer flagged and unblocks their renewal." },
+    { title: "Invoice reminders", urgency: "medium", created_at: 30.days.ago + 1.hour, status: "accepted",
+      reason: "Late payment is their biggest cash-flow problem and this is a small change.",
+      problem_statement: "Overdue invoices are chased when someone remembers.",
+      expected_impact: "Invoices paid closer to their due date." },
+    { title: "Font licence tracker", urgency: "low", created_at: 41.days.ago + 3.hours, status: "declined",
+      reason: "A spreadsheet handles this for a studio their size.",
+      problem_statement: "Nobody is sure which fonts are licensed for which client.",
+      expected_impact: "Avoids an awkward letter from a foundry." }
+  ]
+}
+
+requests_by_organization.each do |organization, requests|
+  requests.each do |attrs|
+    request = Request.find_or_create_by!(title: attrs[:title]) do |r|
+      r.assign_attributes(attrs.except(:status, :reason).merge(organization: organization))
+    end
+    next unless request.previously_new_record? && attrs[:reason]
+
+    decision = request.decide(decision_type: attrs[:status], reason: attrs[:reason])
+    raise ActiveRecord::RecordInvalid, decision unless decision.persisted?
+  end
 end
 
 puts "Seeded #{Request.count} requests and #{Decision.count} decisions"
