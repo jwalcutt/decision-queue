@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_180040) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_183616) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "decisions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "decision_type", null: false
+    t.text "reason", null: false
+    t.bigint "request_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["request_id"], name: "index_decisions_on_request_id"
+    t.check_constraint "decision_type::text = ANY (ARRAY['accepted'::character varying, 'deferred'::character varying, 'declined'::character varying]::text[])", name: "decisions_decision_type_check"
+  end
 
   create_table "requests", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -23,7 +33,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_180040) do
     t.datetime "updated_at", null: false
     t.string "urgency", null: false
     t.index ["status"], name: "index_requests_on_status"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying, 'deferred'::character varying, 'declined'::character varying]::text[])", name: "requests_status_check"
-    t.check_constraint "urgency::text = ANY (ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying]::text[])", name: "requests_urgency_check"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'accepted'::character varying::text, 'deferred'::character varying::text, 'declined'::character varying::text])", name: "requests_status_check"
+    t.check_constraint "urgency::text = ANY (ARRAY['low'::character varying::text, 'medium'::character varying::text, 'high'::character varying::text])", name: "requests_urgency_check"
   end
+
+  add_foreign_key "decisions", "requests"
 end

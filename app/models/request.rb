@@ -1,4 +1,6 @@
 class Request < ApplicationRecord
+  has_many :decisions, dependent: :destroy
+
   STATUS_ORDER = %w[pending deferred accepted declined].freeze
   URGENCY_ORDER = %w[high medium low].freeze
 
