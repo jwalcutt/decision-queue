@@ -5,12 +5,14 @@ one:
   problem_statement: Their ops team re-keys order data into a spreadsheet every Friday.
   expected_impact: Saves roughly four hours a week and removes a recurring source of typos.
   urgency: high
+  created_at: <%= 3.days.ago.to_fs(:db) %>
 
 two:
   title: Dark mode for the Harborlight dashboard
   problem_statement: Night-shift staff find the current theme hard on the eyes.
   expected_impact: Small quality-of-life win for one partner; no revenue attached.
   urgency: low
+  created_at: <%= 2.days.ago.to_fs(:db) %>
 
 three:
   title: Printable member badges for Lantern Cooperative
@@ -18,3 +20,4 @@ three:
   expected_impact: A small time saver once a year.
   urgency: low
   status: deferred
+  created_at: <%= 4.days.ago.to_fs(:db) %>

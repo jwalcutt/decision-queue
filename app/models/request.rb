@@ -3,6 +3,12 @@ class Request < ApplicationRecord
 
   STATUS_ORDER = %w[pending deferred accepted declined].freeze
   URGENCY_ORDER = %w[high medium low].freeze
+  SORTS = {
+    "queue" => :queue_order,
+    "urgency" => :urgency_order,
+    "newest" => :newest_first,
+    "oldest" => :oldest_first
+  }.freeze
 
   enum :urgency, { low: "low", medium: "medium", high: "high" }, validate: { allow_nil: true }
   enum :status, { pending: "pending", accepted: "accepted", deferred: "deferred", declined: "declined" },
@@ -24,8 +30,14 @@ class Request < ApplicationRecord
   scope :queue_order, -> {
     in_order_of(:status, STATUS_ORDER, filter: false)
       .in_order_of(:urgency, URGENCY_ORDER, filter: false)
-      .order(:created_at)
+      .order(:created_at, :id)
   }
+  scope :urgency_order, -> { in_order_of(:urgency, URGENCY_ORDER, filter: false).order(:created_at, :id) }
+  scope :newest_first, -> { order(created_at: :desc, id: :desc) }
+  scope :oldest_first, -> { order(:created_at, :id) }
+
+  # Unknown or blank sort means the default queue order, same rule as the filters.
+  scope :sorted_by, ->(sort) { public_send(SORTS.fetch(sort, :queue_order)) }
 
   # Accepted and declined are final in v1; pending and deferred can still be decided.
   def decidable?

@@ -67,6 +67,37 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(status: "deferred")
   end
 
+  test "sort control reorders the rows and marks the select" do
+    get root_url, params: { sort: "newest" }
+
+    assert_equal [ requests(:two), requests(:one), requests(:three) ].map { |r| dom_id(r) },
+      css_select("tbody tr").map { |tr| tr["id"] }
+    assert_select "select[name='sort'] option[selected][value='newest']"
+    assert_select "a", "Clear"
+  end
+
+  test "sort and filter combine" do
+    get root_url, params: { sort: "urgency", status: "pending" }
+
+    assert_equal [ dom_id(requests(:one)), dom_id(requests(:two)) ], css_select("tbody tr").map { |tr| tr["id"] }
+  end
+
+  test "an unknown sort falls back to queue order" do
+    get root_url
+    default_order = css_select("tbody tr").map { |tr| tr["id"] }
+
+    get root_url, params: { sort: "bogus" }
+
+    assert_response :success
+    assert_equal default_order, css_select("tbody tr").map { |tr| tr["id"] }
+  end
+
+  test "count links keep the current urgency and sort" do
+    get root_url, params: { urgency: "high", sort: "newest" }
+
+    assert_select "#status_counts a[data-status='deferred'][href=?]", root_path(status: "deferred", urgency: "high", sort: "newest")
+  end
+
   test "queue shows a count for every status" do
     queued(urgency: "medium", status: "deferred", created_at: 1.day.ago)
     queued(urgency: "medium", status: "accepted", created_at: 1.day.ago)

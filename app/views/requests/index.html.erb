@@ -1,5 +1,6 @@
 <% content_for :title, "Decision queue" %>
-<% filtering = params[:status].present? || params[:urgency].present? %>
+<% filtering = params[:status].present? || params[:urgency].present? || params[:sort].present? %>
+<% sort_options = [ [ "Queue order", "queue" ], [ "Urgency", "urgency" ], [ "Newest first", "newest" ], [ "Oldest first", "oldest" ] ] %>
 
 <div class="w-full">
   <% if notice.present? %>
@@ -13,7 +14,7 @@
 
   <dl id="status_counts" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
     <% @status_counts.each do |status, count| %>
-      <%= link_to root_path(status: status), data: { status: status }, class: "block rounded-md border border-gray-200 px-4 py-3 hover:bg-gray-50" do %>
+      <%= link_to root_path(**{ status: status, urgency: params[:urgency].presence, sort: params[:sort].presence }.compact), data: { status: status }, class: "block rounded-md border border-gray-200 px-4 py-3 hover:bg-gray-50" do %>
         <dt class="text-sm text-gray-500"><%= status.humanize %></dt>
         <dd class="text-2xl font-semibold"><%= count %></dd>
       <% end %>
@@ -32,6 +33,10 @@
       <%= select_tag :urgency,
             options_for_select([ [ "All urgencies", "" ] ] + Request.urgencies.keys.map { |u| [ u.humanize, u ] }, params[:urgency]),
             class: "rounded-md border border-gray-400 px-3 py-2" %>
+    </div>
+    <div>
+      <%= label_tag :sort, "Sort", class: "block text-sm text-gray-500 mb-1" %>
+      <%= select_tag :sort, options_for_select(sort_options, params[:sort]), class: "rounded-md border border-gray-400 px-3 py-2" %>
     </div>
     <%= submit_tag "Apply", name: nil, class: "rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 font-medium cursor-pointer" %>
     <% if filtering %>

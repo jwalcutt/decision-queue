@@ -143,6 +143,25 @@ class RequestTest < ActiveSupport::TestCase
     assert_equal Request.count, Request.with_urgency("critical").count
   end
 
+  test "sorted_by urgency orders by urgency then age regardless of status" do
+    accepted_high = queued(urgency: "high", status: "accepted", created_at: 5.days.ago)
+    declined_low = queued(urgency: "low", status: "declined", created_at: 1.day.ago)
+
+    expected = [ accepted_high, requests(:one), requests(:three), requests(:two), declined_low ]
+    assert_equal expected.map(&:id), Request.sorted_by("urgency").pluck(:id)
+  end
+
+  test "sorted_by newest and oldest order by creation time" do
+    newest = [ requests(:two), requests(:one), requests(:three) ].map(&:id)
+    assert_equal newest, Request.sorted_by("newest").pluck(:id)
+    assert_equal newest.reverse, Request.sorted_by("oldest").pluck(:id)
+  end
+
+  test "sorted_by falls back to queue order for blank or unknown sorts" do
+    assert_equal Request.queue_order.pluck(:id), Request.sorted_by(nil).pluck(:id)
+    assert_equal Request.queue_order.pluck(:id), Request.sorted_by("bogus").pluck(:id)
+  end
+
   test "status outside the known states is a validation error, not an exception" do
     request = requests(:one).dup
     assert_nothing_raised { request.status = "approved" }
