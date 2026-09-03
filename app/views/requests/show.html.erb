@@ -1,14 +1,14 @@
 <% content_for :title, @request.title %>
 <% status_classes = {
-     "pending" => "bg-gray-100 text-gray-700",
-     "accepted" => "bg-green-50 text-green-700",
-     "deferred" => "bg-amber-50 text-amber-700",
-     "declined" => "bg-red-50 text-red-700"
+     "pending" => "bg-gray-800 text-gray-200",
+     "accepted" => "bg-green-950 text-green-300",
+     "deferred" => "bg-amber-950 text-amber-300",
+     "declined" => "bg-red-950 text-red-300"
    } %>
 
 <div class="md:w-2/3 w-full">
   <% if notice.present? %>
-    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
+    <p class="py-2 px-3 bg-green-950 mb-5 text-green-300 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
   <% end %>
 
   <h1 class="font-bold text-4xl"><%= @request.title %></h1>
@@ -16,7 +16,7 @@
   <p class="mt-3 flex items-center gap-3 text-sm">
     <span id="status" class="rounded-full px-2.5 py-0.5 font-medium <%= status_classes[@request.status] %>"><%= @request.status.humanize %></span>
     <span>Urgency: <strong class="font-medium"><%= @request.urgency.humanize %></strong></span>
-    <span class="text-gray-500">Submitted <%= @request.created_at.to_date %></span>
+    <span class="text-gray-400">Submitted <%= @request.created_at.to_date %></span>
   </p>
 
   <div class="my-6 space-y-5">
@@ -35,17 +35,17 @@
     <% if @request.decisions.any? %>
       <ol class="space-y-3">
         <% @request.decisions.each do |decision| %>
-          <li class="rounded-md border border-gray-200 px-4 py-3">
+          <li class="rounded-md border border-gray-800 px-4 py-3">
             <p class="text-sm">
               <strong class="font-medium"><%= decision.decision_type.humanize %></strong>
-              <span class="text-gray-500"><%= decision.created_at.to_date %></span>
+              <span class="text-gray-400"><%= decision.created_at.to_date %></span>
             </p>
             <p class="mt-1"><%= decision.reason %></p>
           </li>
         <% end %>
       </ol>
     <% else %>
-      <p class="text-gray-500">No decisions yet.</p>
+      <p class="text-gray-400">No decisions yet.</p>
     <% end %>
   </section>
 
@@ -55,7 +55,7 @@
 
     <%= form_with(model: [ @request, @decision ], class: "contents") do |form| %>
       <% if @decision.errors.any? %>
-        <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
+        <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md mt-3">
           <h3>This decision couldn't be saved:</h3>
           <ul class="list-disc ml-6">
             <% @decision.errors.each do |error| %>
@@ -79,7 +79,7 @@
 
       <div class="my-5">
         <%= form.label :reason %>
-        <%= form.textarea :reason, rows: 3, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": @decision.errors[:reason].none?, "border-red-400 focus:outline-red-600": @decision.errors[:reason].any?}] %>
+        <%= form.textarea :reason, rows: 3, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": @decision.errors[:reason].none?, "border-red-500 focus:outline-red-500": @decision.errors[:reason].any?}] %>
       </div>
 
       <div class="inline">
@@ -88,7 +88,7 @@
     <% end %>
   </section>
   <% elsif @decision.errors.any? %>
-    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md my-8">
+    <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md my-8">
       <ul class="list-disc ml-6">
         <% @decision.errors.each do |error| %>
           <li><%= error.full_message %></li>
@@ -97,5 +97,5 @@
     </div>
   <% end %>
 
-  <%= link_to "Back to queue", root_path, data: { controller: "escape-link", action: "keydown.esc@window->escape-link#follow" }, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
+  <%= link_to "Back to queue", root_path, data: { controller: "escape-link", action: "keydown.esc@window->escape-link#follow" }, class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 inline-block font-medium" %>
 </div>

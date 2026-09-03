@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* The app is dark-only. Declaring color-scheme keeps native controls
+   (selects, textareas, scrollbars) dark and stops browsers that force a
+   dark theme from recoloring the page */
+@layer base {
+  html {
+    color-scheme: dark;
+    @apply bg-gray-950 text-gray-100;
+  }
+}

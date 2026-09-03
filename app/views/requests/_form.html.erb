@@ -1,6 +1,6 @@
 <%= form_with(model: request, class: "contents") do |form| %>
   <% if request.errors.any? %>
-    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
+    <div id="error_explanation" class="bg-red-950 text-red-300 px-3 py-2 font-medium rounded-md mt-3">
       <h2>This request couldn't be saved:</h2>
 
       <ul class="list-disc ml-6">
@@ -13,17 +13,17 @@
 
   <div class="my-5">
     <%= form.label :title %>
-    <%= form.text_field :title, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": request.errors[:title].none?, "border-red-400 focus:outline-red-600": request.errors[:title].any?}] %>
+    <%= form.text_field :title, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": request.errors[:title].none?, "border-red-500 focus:outline-red-500": request.errors[:title].any?}] %>
   </div>
 
   <div class="my-5">
     <%= form.label :problem_statement %>
-    <%= form.textarea :problem_statement, rows: 4, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": request.errors[:problem_statement].none?, "border-red-400 focus:outline-red-600": request.errors[:problem_statement].any?}] %>
+    <%= form.textarea :problem_statement, rows: 4, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": request.errors[:problem_statement].none?, "border-red-500 focus:outline-red-500": request.errors[:problem_statement].any?}] %>
   </div>
 
   <div class="my-5">
     <%= form.label :expected_impact %>
-    <%= form.textarea :expected_impact, rows: 4, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": request.errors[:expected_impact].none?, "border-red-400 focus:outline-red-600": request.errors[:expected_impact].any?}] %>
+    <%= form.textarea :expected_impact, rows: 4, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": request.errors[:expected_impact].none?, "border-red-500 focus:outline-red-500": request.errors[:expected_impact].any?}] %>
   </div>
 
   <div class="my-5">
@@ -31,7 +31,7 @@
     <%= form.select :urgency,
           Request.urgencies.keys.map { |u| [u.humanize, u] },
           { prompt: "Select urgency" },
-          class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": request.errors[:urgency].none?, "border-red-400 focus:outline-red-600": request.errors[:urgency].any?}] %>
+          class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": request.errors[:urgency].none?, "border-red-500 focus:outline-red-500": request.errors[:urgency].any?}] %>
   </div>
 
   <div class="inline">
