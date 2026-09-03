@@ -17,6 +17,11 @@
   </div>
 
   <div class="my-5">
+    <%= form.label :organization %>
+    <%= form.text_field :organization, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": request.errors[:organization].none?, "border-red-500 focus:outline-red-500": request.errors[:organization].any?}] %>
+  </div>
+
+  <div class="my-5">
     <%= form.label :problem_statement %>
     <%= form.textarea :problem_statement, rows: 4, class: ["block shadow-sm rounded-md border bg-gray-900 px-3 py-2 mt-2 w-full", {"border-gray-600 focus:outline-blue-500": request.errors[:problem_statement].none?, "border-red-500 focus:outline-red-500": request.errors[:problem_statement].any?}] %>
   </div>

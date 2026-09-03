@@ -62,6 +62,6 @@ class RequestsController < ApplicationController
 
     # Status is deliberately absent: it changes only through the decision flow.
     def request_params
-      params.expect(request: [ :title, :problem_statement, :expected_impact, :urgency ])
+      params.expect(request: [ :title, :organization, :problem_statement, :expected_impact, :urgency ])
     end
 end

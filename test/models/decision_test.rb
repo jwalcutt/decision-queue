@@ -35,7 +35,7 @@ class DecisionTest < ActiveSupport::TestCase
 
   test "a decision on an accepted or declined request is invalid" do
     decided = Request.create!(
-      title: "Already settled", problem_statement: "x", expected_impact: "y",
+      title: "Already settled", organization: "Settled Co", problem_statement: "x", expected_impact: "y",
       urgency: "low", status: "accepted"
     )
 

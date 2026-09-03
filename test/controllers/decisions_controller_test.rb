@@ -4,6 +4,7 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
   test "core loop: create a request, find it in the queue, decide it, and see the queue change" do
     post requests_url, params: { request: {
       title: "Vendor scorecards for Copperline Labs",
+      organization: "Copperline Labs",
       problem_statement: "Their procurement lead compares vendors in a spreadsheet nobody else can read.",
       expected_impact: "Shared scorecards mean fewer meetings to explain a vendor choice.",
       urgency: "high"
@@ -60,7 +61,7 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
 
   test "deciding an accepted request is rejected and changes nothing" do
     accepted = Request.create!(
-      title: "Already accepted", problem_statement: "x", expected_impact: "y",
+      title: "Already accepted", organization: "Settled Co", problem_statement: "x", expected_impact: "y",
       urgency: "low", status: "accepted"
     )
 
@@ -97,7 +98,7 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#decision_form dialog form[action=?]", request_decisions_path(requests(:three))
 
     accepted = Request.create!(
-      title: "Already accepted", problem_statement: "x", expected_impact: "y",
+      title: "Already accepted", organization: "Settled Co", problem_statement: "x", expected_impact: "y",
       urgency: "low", status: "accepted"
     )
     get request_url(accepted)

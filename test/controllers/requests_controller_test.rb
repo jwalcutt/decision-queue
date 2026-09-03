@@ -26,6 +26,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     get new_request_url
     assert_response :success
     assert_select "select[name='request[urgency]'] option", 4
+    assert_select "input[name='request[organization]']"
   end
 
   test "status filter narrows the rows, marks the select, and leaves the counts global" do
@@ -252,17 +253,19 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to requests_url
     follow_redirect!
     assert_includes response.body, "Weekly usage digest for Copperline Labs"
+    assert_select "tbody tr td", "Copperline Labs"
     assert_includes response.body, "Request was successfully created."
   end
 
   test "invalid create persists nothing and names each missing field" do
     assert_no_difference("Request.count") do
-      post requests_url, params: { request: { title: "", problem_statement: "", expected_impact: "", urgency: "" } }
+      post requests_url, params: { request: { title: "", organization: "", problem_statement: "", expected_impact: "", urgency: "" } }
     end
 
     assert_response :unprocessable_content
     assert_includes response.body, "This request couldn't be saved:"
     assert_includes response.body, "Title can&#39;t be blank"
+    assert_includes response.body, "Organization can&#39;t be blank"
     assert_includes response.body, "Problem statement can&#39;t be blank"
     assert_includes response.body, "Expected impact can&#39;t be blank"
     assert_includes response.body, "Urgency can&#39;t be blank"
@@ -279,6 +282,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", @sample_request.title
+    assert_select "#organization", "Northwind Outfitters"
     assert_select "#status", "Pending"
   end
 
@@ -292,6 +296,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     def queued(urgency:, status:, created_at:)
       Request.create!(
         title: "#{status} #{urgency} request",
+        organization: "Placeholder Partners",
         problem_statement: "Placeholder problem for ordering tests.",
         expected_impact: "Placeholder impact for ordering tests.",
         urgency: urgency,
@@ -303,6 +308,7 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     def valid_params
       {
         title: "Weekly usage digest for Copperline Labs",
+        organization: "Copperline Labs",
         problem_statement: "Their account lead assembles usage numbers by hand every Monday.",
         expected_impact: "Frees a few hours a week and gives them numbers they trust.",
         urgency: "medium"

@@ -7,7 +7,7 @@ class Request < ApplicationRecord
   # sort select speak the same vocabulary. Anything else means queue order.
   # Urgency "ascending" is high first: the header toggle's first click should
   # land on the order people almost always want.
-  CONTENT_ATTRIBUTES = %w[title problem_statement expected_impact urgency].freeze
+  CONTENT_ATTRIBUTES = %w[title organization problem_statement expected_impact urgency].freeze
   SORTS = {
     "urgency_asc" => :urgency_high_first,
     "urgency_desc" => :urgency_low_first,
@@ -21,7 +21,7 @@ class Request < ApplicationRecord
   enum :status, { pending: "pending", accepted: "accepted", deferred: "deferred", declined: "declined" },
     default: :pending, validate: true
 
-  validates :title, :problem_statement, :expected_impact, :urgency, presence: true
+  validates :title, :organization, :problem_statement, :expected_impact, :urgency, presence: true
   validate :content_frozen_once_decided, on: :update
   before_destroy :only_while_pending
 

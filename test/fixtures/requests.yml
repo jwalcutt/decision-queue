@@ -2,6 +2,7 @@
 
 one:
   title: Bulk export for Northwind Outfitters
+  organization: Northwind Outfitters
   problem_statement: Their ops team re-keys order data into a spreadsheet every Friday.
   expected_impact: Saves roughly four hours a week and removes a recurring source of typos.
   urgency: high
@@ -9,6 +10,7 @@ one:
 
 two:
   title: Dark mode for the Harborlight dashboard
+  organization: Harborlight
   problem_statement: Night-shift staff find the current theme hard on the eyes.
   expected_impact: Small quality-of-life win for one partner; no revenue attached.
   urgency: low
@@ -16,6 +18,7 @@ two:
 
 three:
   title: Printable member badges for Lantern Cooperative
+  organization: Lantern Cooperative
   problem_statement: Volunteers hand-letter badges for the annual meeting.
   expected_impact: A small time saver once a year.
   urgency: low

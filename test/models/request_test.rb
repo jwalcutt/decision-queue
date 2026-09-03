@@ -5,8 +5,8 @@ class RequestTest < ActiveSupport::TestCase
     assert requests(:one).valid?
   end
 
-  test "title, problem statement, and expected impact are required" do
-    %i[title problem_statement expected_impact].each do |field|
+  test "title, organization, problem statement, and expected impact are required" do
+    %i[title organization problem_statement expected_impact].each do |field|
       request = requests(:one).dup
       request[field] = ""
       assert_not request.valid?, "#{field} should be required"
@@ -208,6 +208,7 @@ class RequestTest < ActiveSupport::TestCase
     def queued(urgency:, status:, created_at:)
       Request.create!(
         title: "#{status} #{urgency} request",
+        organization: "Placeholder Partners",
         problem_statement: "Placeholder problem for ordering tests.",
         expected_impact: "Placeholder impact for ordering tests.",
         urgency: urgency,

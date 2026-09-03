@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_183616) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_211015) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,12 +21,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_183616) do
     t.bigint "request_id", null: false
     t.datetime "updated_at", null: false
     t.index ["request_id"], name: "index_decisions_on_request_id"
-    t.check_constraint "decision_type::text = ANY (ARRAY['accepted'::character varying, 'deferred'::character varying, 'declined'::character varying]::text[])", name: "decisions_decision_type_check"
+    t.check_constraint "decision_type::text = ANY (ARRAY['accepted'::character varying::text, 'deferred'::character varying::text, 'declined'::character varying::text])", name: "decisions_decision_type_check"
   end
 
   create_table "requests", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "expected_impact", null: false
+    t.string "organization", null: false
     t.text "problem_statement", null: false
     t.string "status", default: "pending", null: false
     t.string "title", null: false
