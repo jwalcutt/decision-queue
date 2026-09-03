@@ -16,7 +16,7 @@
   <p class="mt-3 flex items-center gap-3 text-sm">
     <span id="status" class="rounded-full px-2.5 py-0.5 font-medium <%= status_classes[@request.status] %>"><%= @request.status.humanize %></span>
     <span>Urgency: <strong class="font-medium"><%= @request.urgency.humanize %></strong></span>
-    <span class="text-gray-400">Submitted <%= @request.created_at.to_date %></span>
+    <span class="text-gray-400">Submitted <time datetime="<%= @request.created_at.iso8601 %>"><%= @request.created_at.to_fs(:long) %></time></span>
   </p>
 
   <div class="my-6 space-y-5">
@@ -35,10 +35,10 @@
     <% if @request.decisions.any? %>
       <ol class="space-y-3">
         <% @request.decisions.each do |decision| %>
-          <li class="rounded-md border border-gray-800 px-4 py-3">
+          <li data-decision-type="<%= decision.decision_type %>" class="rounded-md border border-gray-800 px-4 py-3">
             <p class="text-sm">
               <strong class="font-medium"><%= decision.decision_type.humanize %></strong>
-              <span class="text-gray-400"><%= decision.created_at.to_date %></span>
+              <time datetime="<%= decision.created_at.iso8601 %>" class="text-gray-400"><%= decision.created_at.to_fs(:long) %></time>
             </p>
             <p class="mt-1"><%= decision.reason %></p>
           </li>

@@ -81,7 +81,12 @@ class DecisionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_url
     assert_equal "accepted", deferred.reload.status
-    assert_equal 2, deferred.decisions.count
+
+    get request_url(deferred)
+    assert_select "#decision_history li", 2
+    assert_equal %w[deferred accepted], css_select("#decision_history li").map { |li| li["data-decision-type"] }
+    assert_select "#decision_history li:last-child", /Ready now/
+    assert_select "#decision_history time[datetime]", 2
   end
 
   test "the decision form is shown for deferred requests and hidden for final ones" do
