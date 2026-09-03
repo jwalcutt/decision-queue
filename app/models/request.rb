@@ -8,6 +8,12 @@ class Request < ApplicationRecord
 
   validates :title, :problem_statement, :expected_impact, :urgency, presence: true
 
+  # Counts for every status in queue order, zeros included, from one GROUP BY.
+  def self.status_counts
+    counts = group(:status).count
+    STATUS_ORDER.index_with { |status| counts.fetch(status, 0) }
+  end
+
   # Queue order: still-actionable statuses first, then urgency, then oldest first.
   scope :queue_order, -> {
     in_order_of(:status, STATUS_ORDER, filter: false)

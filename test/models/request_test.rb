@@ -52,6 +52,16 @@ class RequestTest < ActiveSupport::TestCase
     assert_equal expected.map(&:id), Request.queue_order.pluck(:id)
   end
 
+  test "status counts cover every status in queue order with zeros filled in" do
+    assert_equal({ "pending" => 2, "deferred" => 0, "accepted" => 0, "declined" => 0 }, Request.status_counts)
+    assert_equal Request::STATUS_ORDER, Request.status_counts.keys
+
+    queued(urgency: "low", status: "accepted", created_at: 1.day.ago)
+    queued(urgency: "low", status: "declined", created_at: 1.day.ago)
+
+    assert_equal({ "pending" => 2, "deferred" => 0, "accepted" => 1, "declined" => 1 }, Request.status_counts)
+  end
+
   test "status outside the known states is a validation error, not an exception" do
     request = requests(:one).dup
     assert_nothing_raised { request.status = "approved" }

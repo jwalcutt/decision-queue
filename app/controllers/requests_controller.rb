@@ -4,6 +4,7 @@ class RequestsController < ApplicationController
   # GET /requests
   def index
     @requests = Request.queue_order
+    @status_counts = Request.status_counts
   end
 
   # GET /requests/1

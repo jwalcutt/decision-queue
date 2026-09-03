@@ -28,6 +28,20 @@ class RequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='request[urgency]'] option", 4
   end
 
+  test "queue shows a count for every status" do
+    queued(urgency: "medium", status: "deferred", created_at: 1.day.ago)
+    queued(urgency: "medium", status: "accepted", created_at: 1.day.ago)
+    queued(urgency: "medium", status: "declined", created_at: 1.day.ago)
+    queued(urgency: "low", status: "declined", created_at: 2.days.ago)
+
+    get root_url
+
+    assert_select "#status_counts [data-status='pending'] dd", "2"
+    assert_select "#status_counts [data-status='deferred'] dd", "1"
+    assert_select "#status_counts [data-status='accepted'] dd", "1"
+    assert_select "#status_counts [data-status='declined'] dd", "2"
+  end
+
   test "valid create redirects to the queue and shows the new request" do
     assert_difference("Request.count", 1) do
       post requests_url, params: { request: valid_params }
